@@ -69,7 +69,7 @@
     overflow-x: hidden;
   }
   
-  /* FIXED BACKGROUND LOGO */
+  /* RED-BLUE GRADIENT BACKGROUND */
   body::before {
     content: '';
     position: fixed;
@@ -77,16 +77,9 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
-      linear-gradient(135deg, rgba(139, 0, 0, 0.85) 0%, rgba(0, 51, 102, 0.85) 50%, rgba(108, 117, 125, 0.85) 100%),
-      url('https://i.ibb.co/4R9Fz7z/dshs-logo.png');
-    background-size: cover, 300px;
-    background-position: center, center 20px;
-    background-repeat: no-repeat, no-repeat;
+    background: linear-gradient(135deg, #8B0000 0%, #003366 100%);
     background-attachment: fixed;
     z-index: -1;
-    opacity: 0.15;
-    pointer-events: none;
   }
   
   body.dark-mode {
@@ -97,14 +90,7 @@
   }
   
   body.dark-mode::before {
-    background: 
-      linear-gradient(135deg, rgba(26, 0, 0, 0.9) 0%, rgba(0, 26, 51, 0.9) 50%, rgba(26, 26, 26, 0.9) 100%),
-      url('https://i.ibb.co/4R9Fz7z/dshs-logo.png');
-    background-size: cover, 300px;
-    background-position: center, center 20px;
-    background-repeat: no-repeat, no-repeat;
-    background-attachment: fixed;
-    opacity: 0.1;
+    background: linear-gradient(135deg, #1a0000 0%, #001a33 100%);
   }
   
   #loadingOverlay {
@@ -667,6 +653,17 @@
   
   .settings-section:last-child { border-bottom: none; }
   
+  /* Admin badge styling */
+  .admin-badge {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 5px;
+  }
+  
   @media (max-width: 768px) {
     .menu { width: 85%; max-width: 340px; }
     .section { padding: 18px; margin-top: 12px; }
@@ -729,7 +726,7 @@
 <div class="login" id="login">
   <div class="box">
     <h2>🎓 DSHS Login</h2>
-    <input type="email" id="loginEmail" placeholder="📧 Email">
+    <input type="text" id="loginEmail" placeholder="📧 Email or Username">
     <div class="pass-wrapper">
       <input type="password" id="loginPassword" placeholder="🔒 Password">
       <span onclick="togglePassword()">👁️</span>
@@ -740,6 +737,9 @@
     <p style="font-size: 13px; margin-top: 12px;">
       <span class="signup-link" onclick="showForgotPassword()">Forgot Password?</span> | 
       <span class="signup-link" onclick="showSignup()">Sign up!</span>
+    </p>
+    <p style="font-size: 11px; color: #666; margin-top: 15px; padding: 8px; background: #f8f9fa; border-radius: 5px;">
+      🔑 <strong>Admin Login:</strong> Username: <code>admin</code> | Password: <code>admin</code>
     </p>
   </div>
 </div>
@@ -819,6 +819,15 @@
   const WARNING_BEFORE = 60 * 1000;
   let db, auth;
   let unsubscribers = [];
+  
+  // HARDCODED ADMIN CREDENTIALS
+  const HARDCODED_ADMIN = {
+    username: "admin",
+    password: "admin",
+    name: "System Administrator",
+    email: "admin@dshs.edu",
+    role: "admin"
+  };
   
   //====== INITIALIZATION ======
   document.addEventListener('DOMContentLoaded', async function() {
@@ -945,7 +954,37 @@
     const password = document.getElementById("loginPassword").value;
     
     if(!email || !password) {
-      showError("Please enter email and password");
+      showError("Please enter email/username and password");
+      return;
+    }
+    
+    // CHECK HARDCODED ADMIN LOGIN
+    if(email === HARDCODED_ADMIN.username && password === HARDCODED_ADMIN.password) {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('loadingStatus').textContent = 'Logging in as Admin...';
+      
+      // Set admin session without Firebase Auth
+      role = HARDCODED_ADMIN.role;
+      currentUser = HARDCODED_ADMIN.name;
+      currentUserId = "HARDCODED_ADMIN_" + Date.now();
+      currentUserData = {
+        name: HARDCODED_ADMIN.name,
+        email: HARDCODED_ADMIN.email,
+        role: HARDCODED_ADMIN.role,
+        uid: currentUserId
+      };
+      
+      setTimeout(() => {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('signup').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('loadingOverlay').style.display = 'none';
+        
+        loadDashboard();
+        startSessionTimer();
+        addNotification('Welcome back, Administrator!', 'system');
+      }, 500);
+      
       return;
     }
     
@@ -1093,6 +1132,24 @@
     unsubscribers.forEach(unsub => unsub());
     unsubscribers = [];
     
+    // If hardcoded admin, just clear session without Firebase signOut
+    if(currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_")) {
+      role = "";
+      currentUser = "";
+      currentUserId = "";
+      currentUserData = null;
+      
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("login").style.display = "flex";
+      document.getElementById("menu").classList.remove("show");
+      document.getElementById("menuOverlay").classList.remove("show");
+      
+      if(sessionTimer) clearTimeout(sessionTimer);
+      if(sessionWarningTimer) clearTimeout(sessionWarningTimer);
+      document.getElementById('sessionWarning').style.display = 'none';
+      return;
+    }
+    
     await window.firebaseFns.signOut(auth);
     role = "";
     currentUser = "";
@@ -1188,7 +1245,10 @@
   
   //====== DASHBOARD FUNCTIONS ======
   function loadDashboard() {
-    document.getElementById("roleTitle").innerText = role.toUpperCase() + " DASHBOARD";
+    const isHardcodedAdmin = currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_");
+    const displayRole = isHardcodedAdmin ? "ADMIN (HARDCODED)" : role.toUpperCase();
+    document.getElementById("roleTitle").innerHTML = displayRole + " DASHBOARD" + (isHardcodedAdmin ? ' <span class="admin-badge">HARDCODED</span>' : '');
+    
     const menu = document.getElementById("menu");
     menu.innerHTML = "";
     
@@ -1267,7 +1327,7 @@
       ];
     }
     
-    menu.innerHTML = '<div class="menu-header"><h3>🎓 DSHS Menu</h3><p>👤 ' + currentUser + '</p></div>';
+    menu.innerHTML = '<div class="menu-header"><h3>🎓 DSHS Menu</h3><p>👤 ' + currentUser + (isHardcodedAdmin ? ' <span class="admin-badge">ADMIN</span>' : '') + '</p></div>';
     
     items.forEach(function(item) {
       const btn = document.createElement("button");
