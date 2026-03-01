@@ -145,6 +145,26 @@
     border-color: #444;
   }
   
+  /* BACKGROUND LOGO STYLING */
+  .background-logo {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 150px;
+    height: auto;
+    z-index: 100;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 768px) {
+    .background-logo {
+      width: 100px;
+      top: 70px;
+      right: 10px;
+    }
+  }
+  
   #loadingOverlay {
     position: fixed;
     top: 0;
@@ -1825,37 +1845,10 @@
     margin-top: 15px;
   }
   
-  .school-map-container h4 {
-    color: var(--main-blue);
-    text-align: center;
-    margin-top: 0;
-  }
-  
   .school-map-container img {
     max-width: 100%;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  }
-  
-  .map-legend {
-    margin-top: 15px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  
-  .map-legend-item {
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    border-left: 4px solid var(--main-red);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  
-  .map-legend-item strong {
-    color: var(--main-blue);
-    display: block;
-    margin-bottom: 5px;
   }
   
   .qr-scanner-container {
@@ -2021,7 +2014,7 @@
   @media print {
     .menu, .toggle-btn, .header, .print-controls, .attendance-legend, .menu-overlay,
     .notification-bell, .session-warning, .quiz-timer, .install-pwa-btn, .logout-btn,
-    .offline-indicator, #loadingOverlay, body::before {
+    .offline-indicator, #loadingOverlay, body::before, .background-logo {
       display: none !important;
     }
     .id-card { break-inside: avoid; page-break-inside: avoid; border: 3px solid #000; display: inline-block; margin: 10px; }
@@ -2037,9 +2030,12 @@
 </head>
 <body>
   
+  <!-- BACKGROUND LOGO -->
+  <img src="https://ibb.co/SwBXHzBN/Black-Modern-Connect-Logo-20260226-214330-0000.png" alt="DSHS Logo" class="background-logo">
+  
   <div id="loadingOverlay">
     <div class="spinner"></div>
-    <p>Loading DSHS System...</p>
+    <p>Loading Connect-ta System...</p>
     <p id="loadingStatus" style="font-size: 12px; opacity: 0.8;">Connecting to Firebase</p>
   </div>
 
@@ -2070,7 +2066,7 @@
 
 <div class="login" id="login">
   <div class="box">
-    <h2>🎓 DSHS Login</h2>
+    <h2>🎓 Connect-ta Login</h2>
     <input type="text" id="loginEmail" placeholder="📧 Email or Username">
     <div class="pass-wrapper">
       <input type="password" id="loginPassword" placeholder="🔒 Password">
@@ -2143,9 +2139,9 @@
   <div class="container">
     <div class="menu" id="menu"></div>
     <div class="content" id="content">
-      <div class="school-welcome">
-        <h2>🏫 Dumingag Senior High School</h2>
-        <p>Welcome to the DSHS School System</p>
+      div class="school-welcome">
+        <h2>🏫 Connect-ta !</h2>
+        <p>Welcome to the Connect-ta School System</p>
       </div>
       <div class="section"><h3>👋 Welcome</h3><p>Select an option from the menu to get started.</p></div>
     </div>
@@ -4380,42 +4376,7 @@
       const mapContainer = document.createElement("div");
       mapContainer.className = "school-map-container";
       mapContainer.innerHTML = `
-        <h4>🏫 DSHS Campus Layout</h4>
-        <img src="https://via.placeholder.com/800x600" alt="DSHS School Map" style="max-width:100%;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-        <div class="map-legend">
-          <div class="map-legend-item">
-            <strong>🏢 Building A</strong>
-            Main Entrance & Administration
-          </div>
-          <div class="map-legend-item">
-            <strong>🏫 Building B</strong>
-            Classrooms 12-A, 12-B, 12-C
-          </div>
-          <div class="map-legend-item">
-            <strong>🔬 Building C</strong>
-            Science Laboratory
-          </div>
-          <div class="map-legend-item">
-            <strong>📚 Building D</strong>
-            Library & Computer Room
-          </div>
-          <div class="map-legend-item">
-            <strong>👨‍🏫 Building E</strong>
-            Faculty Room
-          </div>
-          <div class="map-legend-item">
-            <strong>🏀 Gymnasium</strong>
-            Physical Education Activities
-          </div>
-          <div class="map-legend-item">
-            <strong>🍽️ Cafeteria</strong>
-            Student Lounge
-          </div>
-          <div class="map-legend-item">
-            <strong>💼 Guidance Office</strong>
-            Counseling Services
-          </div>
-        </div>
+        <img src="https://ibb.co/ttJTTNc/1771861759190.jpg" alt="DSHS School Map" style="max-width:100%;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
       `;
       section.appendChild(mapContainer);
       
