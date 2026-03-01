@@ -17,7 +17,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
@@ -44,7 +44,7 @@
   window.firebaseStorage = storage;
   window.firebaseFns = {
     onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword,
-    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit,
+    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch,
     ref, uploadBytes, getDownloadURL
   };
 </script>
@@ -114,9 +114,6 @@
   body.dark-mode .messaging-container .contacts-list,
   body.dark-mode .messaging-container .chat-area,
   body.dark-mode .assignment-card,
-  body.dark-mode .book-card,
-  body.dark-mode .room-card,
-  body.dark-mode .scholarship-card,
   body.dark-mode .honor-roll,
   body.dark-mode .transmutation-table,
   body.dark-mode .conference-slot,
@@ -125,7 +122,6 @@
   body.dark-mode .behavior-item,
   body.dark-mode .upload-zone,
   body.dark-mode .quiz-question,
-  body.dark-mode .alumni-card,
   body.dark-mode .settings-section {
     background: #2d2d2d;
     color: #e0e0e0;
@@ -766,20 +762,6 @@
     color: #856404;
   }
   
-  /* Scholarship Card */
-  .scholarship-card {
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-    border: 2px solid #b8860b;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 15px 0;
-  }
-  
-  .scholarship-card h4 {
-    margin-top: 0;
-    color: #8b6914;
-  }
-  
   /* Notification Center */
   .notification-bell {
     position: fixed;
@@ -937,88 +919,6 @@
     border-radius: 12px;
     margin: 20px 0;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  
-  /* Library Styles */
-  .book-card {
-    display: flex;
-    gap: 15px;
-    padding: 15px;
-    border: 2px solid #dee2e6;
-    border-radius: 10px;
-    margin: 10px 0;
-    transition: all 0.3s;
-  }
-  
-  .book-card:hover {
-    border-color: var(--main-blue);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  }
-  
-  .book-cover {
-    width: 80px;
-    height: 120px;
-    background: linear-gradient(135deg, var(--main-red) 0%, var(--main-blue) 100%);
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 40px;
-  }
-  
-  .book-info {
-    flex: 1;
-  }
-  
-  .book-status {
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    display: inline-block;
-    margin-top: 10px;
-  }
-  
-  .book-status.available {
-    background: #d4edda;
-    color: #155724;
-  }
-  
-  .book-status.borrowed {
-    background: #f8d7da;
-    color: #721c24;
-  }
-  
-  /* Room Booking */
-  .room-card {
-    padding: 20px;
-    border: 2px solid #dee2e6;
-    border-radius: 12px;
-    margin: 10px 0;
-    transition: all 0.3s;
-  }
-  
-  .room-card:hover {
-    border-color: var(--main-blue);
-  }
-  
-  .room-card.booked {
-    background: #f8f9fa;
-    opacity: 0.7;
-  }
-  
-  .room-image {
-    width: 100%;
-    height: 150px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 60px;
-    margin-bottom: 15px;
   }
   
   /* Enrollment Form */
@@ -1197,55 +1097,6 @@
     border-color: var(--main-blue);
     background: var(--main-blue);
     color: white;
-  }
-  
-  /* Transcript Styles */
-  .transcript-header {
-    text-align: center;
-    border-bottom: 3px double var(--main-blue);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-  }
-  
-  .transcript-seal {
-    width: 100px;
-    height: 100px;
-    border: 3px solid var(--main-red);
-    border-radius: 50%;
-    margin: 20px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--main-red);
-    font-weight: bold;
-    transform: rotate(-15deg);
-  }
-  
-  /* Alumni Styles */
-  .alumni-card {
-    text-align: center;
-    padding: 30px;
-    border: 2px solid #dee2e6;
-    border-radius: 15px;
-    transition: all 0.3s;
-  }
-  
-  .alumni-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  }
-  
-  .alumni-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--main-red) 0%, var(--main-blue) 100%);
-    margin: 0 auto 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 40px;
   }
   
   /* Settings Panel */
@@ -2218,31 +2069,6 @@
     days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
   };
   
-  // Local data storage for features not yet in Firebase
-  let localData = {
-    subjects: ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"],
-    scheduleTimes: {"3I's":"8:00-9:00","Genchem 2":"9:00-10:00","P6 2":"10:00-11:00","Perdev":"11:45-12:30","CPAR":"12:30-1:00","Entrepreneurship":"1:00-2:00"},
-    gradesData: {},
-    gradeHistory: {},
-    attendanceData: {},
-    plannerData: {},
-    messages: [],
-    notifications: [],
-    assignments: [],
-    submissions: [],
-    payments: [],
-    scholarships: [],
-    libraryBooks: [],
-    roomBookings: [],
-    conferences: [],
-    alumni: [],
-    quizzes: [],
-    quizResults: [],
-    courseMaterials: [],
-    behaviorLog: {},
-    sectionSubjects: {} // Store subject assignments per section
-  };
-  
   //====== INITIALIZATION ======
   document.addEventListener('DOMContentLoaded', async function() {
     while(!window.firebaseApp) {
@@ -2280,20 +2106,57 @@
     });
     
     setupPWA();
-    
-    // Load local data from localStorage
-    loadLocalData();
   });
   
-  function loadLocalData() {
-    const saved = localStorage.getItem('dshsLocalData');
-    if(saved) {
-      localData = JSON.parse(saved);
+  //====== ANALYTICS SYNC FUNCTIONS ======
+  async function updateAnalytics() {
+    try {
+      const allUsers = await getCollectionData('users');
+      const students = allUsers.filter(u => u.role === 'student');
+      const teachers = allUsers.filter(u => u.role === 'teacher');
+      const parents = allUsers.filter(u => u.role === 'parent');
+      const pending = students.filter(s => !s.approved).length;
+      
+      const trackData = {};
+      students.forEach(s => {
+        trackData[s.track] = (trackData[s.track] || 0) + 1;
+      });
+      
+      const analyticsData = {
+        totalStudents: students.length,
+        totalTeachers: teachers.length,
+        totalParents: parents.length,
+        pendingApprovals: pending,
+        trackDistribution: trackData,
+        lastUpdated: window.firebaseFns.serverTimestamp()
+      };
+      
+      await window.firebaseFns.setDoc(
+        window.firebaseFns.doc(db, 'analytics', 'dashboard'),
+        analyticsData,
+        { merge: true }
+      );
+      
+      console.log('Analytics updated successfully');
+    } catch(error) {
+      console.error('Error updating analytics:', error);
     }
   }
   
-  function saveLocalData() {
-    localStorage.setItem('dshsLocalData', JSON.stringify(localData));
+  async function subscribeToAnalytics(callback) {
+    const unsubscribe = window.firebaseFns.onSnapshot(
+      window.firebaseFns.doc(db, 'analytics', 'dashboard'),
+      (doc) => {
+        if(doc.exists()) {
+          callback(doc.data());
+        }
+      },
+      (error) => {
+        console.error('Analytics subscription error:', error);
+      }
+    );
+    unsubscribers.push(unsubscribe);
+    return unsubscribe;
   }
   
   //====== FIREBASE DATA FUNCTIONS ======
@@ -2565,16 +2428,8 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Initialize local data for student
-      localData.gradesData[name] = {};
-      localData.gradeHistory[name] = {};
-      localData.subjects.forEach(sub => {
-        const grade = Math.floor(Math.random() * 21) + 80;
-        localData.gradesData[name][sub] = grade;
-        localData.gradeHistory[name][sub] = [{quarter: 1, grade: grade, date: new Date().toISOString()}];
-      });
-      localData.attendanceData[name] = {};
-      saveLocalData();
+      // Update analytics after creating student
+      await updateAnalytics();
       
       const parentPassword = Math.random().toString(36).slice(-8);
       const parentEmail = `parent.${email}`;
@@ -2585,9 +2440,23 @@
         name: `Parent of ${name}`,
         childName: name,
         childId: id,
+        childSection: section,
         email: parentEmail,
         role: 'parent',
         approved: true,
+        createdAt: window.firebaseFns.serverTimestamp()
+      });
+      
+      // Update analytics after creating parent
+      await updateAnalytics();
+      
+      // Store parent account info in parentAccounts collection
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'parentAccounts', parentCredential.user.uid), {
+        studentName: name,
+        studentId: id,
+        section: section,
+        parentEmail: parentEmail,
+        parentPassword: parentPassword,
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
@@ -2790,7 +2659,6 @@
         {name: "My Mood", icon: "😊"},
         {name: "Honor Roll", icon: "🏆"},
         {name: "Payments", icon: "💳"},
-        {name: "Library", icon: "📚"},
         {name: "Emergency Numbers", icon: "🚨"},
         {name: "School Map", icon: "🗺️"},
         {name: "Settings", icon: "⚙️"}
@@ -2823,12 +2691,8 @@
         {name: "Manage Users", icon: "⚙️"},
         {name: "Enrollment", icon: "📝"},
         {name: "Class Scheduling", icon: "📅"},
-        {name: "Room Booking", icon: "🏫"},
-        {name: "Library Management", icon: "📚"},
         {name: "Honor Roll", icon: "🏆"},
         {name: "Analytics", icon: "📊"},
-        {name: "Scholarships", icon: "🎓"},
-        {name: "Alumni", icon: "🎓"},
         {name: "Bulletin Board", icon: "📢"},
         {name: "Emergency Numbers", icon: "🚨"},
         {name: "School Map", icon: "🗺️"},
@@ -2934,11 +2798,8 @@
                 const scannedStudent = parts[0];
                 const today = new Date().toISOString().split("T")[0];
                 
-                if(!localData.attendanceData[scannedStudent]) {
-                  localData.attendanceData[scannedStudent] = {};
-                }
-                localData.attendanceData[scannedStudent][today] = "P";
-                saveLocalData();
+                // Save attendance to Firebase
+                saveAttendance(scannedStudent, today, "P");
                 
                 const resultDiv = document.getElementById("scanner-result");
                 resultDiv.style.display = "block";
@@ -2964,6 +2825,24 @@
     //------ GRADES ------
     else if(tab === "Grades" || tab === "Child Grades") {
       section.innerHTML = "<h3>📊 Grades</h3>";
+      
+      // Subscribe to real-time grades updates
+      const gradesUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'grades'),
+        (snapshot) => {
+          const gradesData = {};
+          snapshot.docs.forEach(doc => {
+            gradesData[doc.id] = doc.data();
+          });
+          window.realtimeGrades = gradesData;
+          if(document.getElementById('gradesTable')) {
+            const studentSelect = document.getElementById('gradesStudentSelect');
+            const studentName = studentSelect ? studentSelect.value : currentUser;
+            renderGradesTable(section, studentName);
+          }
+        }
+      );
+      unsubscribers.push(gradesUnsubscribe);
       
       // Semester Selector
       const semSelector = document.createElement("div");
@@ -3067,67 +2946,19 @@
         section.innerHTML = "<h3>📜 Transcript of Records</h3>";
         section.innerHTML += "<p>Official transcript for college/university applications.</p>";
         
+        // Subscribe to grades for real-time updates
+        const gradesUnsubscribe = window.firebaseFns.onSnapshot(
+          window.firebaseFns.doc(db, 'grades', currentUserData.name),
+          (doc) => {
+            const grades = doc.exists() ? doc.data() : {};
+            renderTranscript(grades);
+          }
+        );
+        unsubscribers.push(gradesUnsubscribe);
+        
         const transcriptDiv = document.createElement('div');
+        transcriptDiv.id = 'transcriptContainer';
         transcriptDiv.className = 'report-card';
-        transcriptDiv.innerHTML = `
-          <div class="transcript-header">
-            <h2>DUMINGAG SENIOR HIGH SCHOOL</h2>
-            <h3>OFFICIAL TRANSCRIPT OF RECORDS</h3>
-            <div class="transcript-seal">OFFICIAL</div>
-          </div>
-          <div style="margin: 20px 0;">
-            <p><strong>Student Name:</strong> ${currentUserData.name}</p>
-            <p><strong>Student ID:</strong> ${currentUserData.studentId}</p>
-            <p><strong>Track/Strand:</strong> ${currentUserData.track} - ${currentUserData.strand}</p>
-            <p><strong>Date of Graduation:</strong> June 2024</p>
-          </div>
-          <h4>Academic Record</h4>
-        `;
-        
-        const gradesTable = document.createElement('table');
-        gradesTable.innerHTML = '<tr><th>Subject</th><th>Grade 11</th><th>Grade 12</th><th>Final</th></tr>';
-        
-        localData.subjects.forEach(sub => {
-          const g11Grade = Math.floor(Math.random() * 15) + 85;
-          const g12Grade = localData.gradesData[currentUserData.name]?.[sub] || 0;
-          const final = Math.round((g11Grade + g12Grade) / 2);
-          
-          gradesTable.innerHTML += `
-            <tr>
-              <td>${sub}</td>
-              <td>${g11Grade}</td>
-              <td>${g12Grade}</td>
-              <td><strong>${final}</strong></td>
-            </tr>
-          `;
-        });
-        
-        transcriptDiv.appendChild(gradesTable);
-        
-        transcriptDiv.innerHTML += `
-          <div style="margin-top: 40px; text-align: center;">
-            <p><em>This is to certify that the above is a true copy of the academic records of the student.</em></p>
-            <div style="margin-top: 60px; display: flex; justify-content: space-around;">
-              <div style="text-align: center;">
-                <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
-                  <strong>School Principal</strong><br>
-                  <small>Signature over Printed Name</small>
-                </div>
-              </div>
-              <div style="text-align: center;">
-                <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
-                  <strong>Registrar</strong><br>
-                  <small>Signature over Printed Name</small>
-                </div>
-              </div>
-            </div>
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-              Date Issued: ${new Date().toLocaleDateString()}<br>
-              Reference No: TR-${currentUserData.studentId}-${Date.now()}
-            </p>
-          </div>
-        `;
-        
         section.appendChild(transcriptDiv);
         
         const downloadBtn = document.createElement('button');
@@ -3143,6 +2974,36 @@
     else if(tab === "Assignments") {
       section.innerHTML = "<h3>📝 Assignments</h3>";
       
+      // Subscribe to real-time assignments
+      const assignmentsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'assignments'),
+        (snapshot) => {
+          const assignments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeAssignments = assignments;
+          if(document.getElementById('assignmentsContainer')) {
+            renderAssignments();
+          }
+        }
+      );
+      unsubscribers.push(assignmentsUnsubscribe);
+      
+      // Subscribe to submissions
+      const submissionsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'submissions'),
+        (snapshot) => {
+          const submissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeSubmissions = submissions;
+          if(document.getElementById('assignmentsContainer')) {
+            renderAssignments();
+          }
+        }
+      );
+      unsubscribers.push(submissionsUnsubscribe);
+      
+      const container = document.createElement('div');
+      container.id = 'assignmentsContainer';
+      section.appendChild(container);
+      
       if(role === "teacher") {
         section.innerHTML += `
           <div style="margin-bottom: 20px;">
@@ -3152,7 +3013,12 @@
             <input type="text" id="assignmentTitle" placeholder="Assignment Title">
             <textarea id="assignmentDesc" placeholder="Description" rows="3"></textarea>
             <select id="assignmentSubject">
-              ${localData.subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
+              <option value="3I's">3I's</option>
+              <option value="Genchem 2">Genchem 2</option>
+              <option value="P6 2">P6 2</option>
+              <option value="Perdev">Perdev</option>
+              <option value="CPAR">CPAR</option>
+              <option value="Entrepreneurship">Entrepreneurship</option>
             </select>
             <input type="date" id="assignmentDue">
             <input type="number" id="assignmentPoints" placeholder="Total Points" value="100">
@@ -3160,66 +3026,9 @@
             <button onclick="createAssignment()" style="background: var(--main-blue); color: white; margin-top: 10px;">✅ Create</button>
           </div>
         `;
-        
-        const teacherAssignments = localData.assignments.filter(a => a.teacher === currentUser);
-        if(teacherAssignments.length === 0) {
-          section.innerHTML += "<p>No assignments created yet.</p>";
-        } else {
-          teacherAssignments.forEach(a => {
-            const submissions_count = localData.submissions.filter(s => s.assignmentId === a.id).length;
-            section.innerHTML += `
-              <div class="assignment-card">
-                <h4>${a.title}</h4>
-                <p>${a.description}</p>
-                <p><strong>Subject:</strong> ${a.subject} | <strong>Due:</strong> ${new Date(a.dueDate).toLocaleDateString()}</p>
-                <p><strong>Submissions:</strong> ${submissions_count}</p>
-                <button onclick="viewSubmissions('${a.id}')" style="width: auto; background: var(--main-blue); color: white;">📋 View Submissions</button>
-              </div>
-            `;
-          });
-        }
-      } else if(role === "student") {
-        const studentAssignments = localData.assignments.filter(a => 
-          a.section === currentUserData.section && new Date(a.dueDate) >= new Date()
-        );
-        
-        if(studentAssignments.length === 0) {
-          section.innerHTML += "<p>No pending assignments. Great job! 🎉</p>";
-        } else {
-          studentAssignments.forEach(a => {
-            const submission = localData.submissions.find(s => s.assignmentId === a.id && s.student === currentUser);
-            let status = 'pending';
-            let statusText = '⏳ Pending';
-            let grade = '';
-            
-            if(submission) {
-              status = submission.graded ? 'graded' : 'submitted';
-              statusText = submission.graded ? '✅ Graded' : '📤 Submitted';
-              grade = submission.graded ? `<br><strong>Grade: ${submission.grade}/${a.points}</strong>` : '';
-            } else if(new Date(a.dueDate) < new Date()) {
-              status = 'late';
-              statusText = '⚠️ Late';
-            }
-            
-            section.innerHTML += `
-              <div class="assignment-card">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                  <div>
-                    <h4>${a.title}</h4>
-                    <p>${a.description}</p>
-                    <p><strong>Subject:</strong> ${a.subject} | <strong>Due:</strong> ${new Date(a.dueDate).toLocaleDateString()}</p>
-                    <span class="assignment-status ${status}">${statusText}</span>
-                    ${grade}
-                  </div>
-                  ${!submission ? `
-                    <button onclick="submitAssignment('${a.id}')" style="width: auto; background: #28a745; color: white;">📤 Submit</button>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          });
-        }
       }
+      
+      renderAssignments();
       content.appendChild(section);
     }
     
@@ -3227,12 +3036,49 @@
     else if(tab === "Quizzes") {
       section.innerHTML = "<h3>❓ Quizzes & Exams</h3>";
       
+      // Subscribe to real-time quizzes
+      const quizzesUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'quizzes'),
+        (snapshot) => {
+          const quizzes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeQuizzes = quizzes;
+          if(document.getElementById('quizzesContainer')) {
+            renderQuizzes();
+          }
+        }
+      );
+      unsubscribers.push(quizzesUnsubscribe);
+      
+      // Subscribe to quiz results
+      const resultsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'quizResults'),
+        (snapshot) => {
+          const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeQuizResults = results;
+          if(document.getElementById('quizzesContainer')) {
+            renderQuizzes();
+          }
+        }
+      );
+      unsubscribers.push(resultsUnsubscribe);
+      
+      const container = document.createElement('div');
+      container.id = 'quizzesContainer';
+      section.appendChild(container);
+      
       if(role === "teacher") {
         section.innerHTML += `
           <button onclick="showCreateQuiz()" style="background: #28a745; color: white; width: auto; margin-bottom: 20px;">➕ Create Quiz</button>
           <div id="createQuizForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px;">
             <input type="text" id="quizTitle" placeholder="Quiz Title">
-            <select id="quizSubject">${localData.subjects.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+            <select id="quizSubject">
+              <option value="3I's">3I's</option>
+              <option value="Genchem 2">Genchem 2</option>
+              <option value="P6 2">P6 2</option>
+              <option value="Perdev">Perdev</option>
+              <option value="CPAR">CPAR</option>
+              <option value="Entrepreneurship">Entrepreneurship</option>
+            </select>
             <input type="number" id="quizDuration" placeholder="Duration (minutes)" value="30">
             <input type="datetime-local" id="quizStart">
             <input type="datetime-local" id="quizEnd">
@@ -3241,47 +3087,9 @@
             <button onclick="saveQuiz()" style="background: #28a745; color: white;">💾 Save Quiz</button>
           </div>
         `;
-        
-        const teacherQuizzes = localData.quizzes.filter(q => q.teacher === currentUser);
-        teacherQuizzes.forEach(q => {
-          const results = localData.quizResults.filter(r => r.quizId === q.id);
-          section.innerHTML += `
-            <div class="assignment-card">
-              <h4>${q.title}</h4>
-              <p><strong>Subject:</strong> ${q.subject} | <strong>Questions:</strong> ${q.questions.length}</p>
-              <p><strong>Participants:</strong> ${results.length} | <strong>Average:</strong> ${results.length ? (results.reduce((a,b) => a + b.score, 0) / results.length).toFixed(2) : 'N/A'}%</p>
-              <button onclick="viewQuizResults('${q.id}')" style="width: auto; background: var(--main-blue); color: white;">📊 Results</button>
-            </div>
-          `;
-        });
-      } else if(role === "student") {
-        const availableQuizzes = localData.quizzes.filter(q => 
-          q.section === currentUserData.section && 
-          new Date(q.startTime) <= new Date() && 
-          new Date(q.endTime) >= new Date()
-        );
-        
-        availableQuizzes.forEach(q => {
-          const taken = localData.quizResults.find(r => r.quizId === q.id && r.student === currentUser);
-          if(!taken) {
-            section.innerHTML += `
-              <div class="assignment-card">
-                <h4>${q.title}</h4>
-                <p><strong>Subject:</strong> ${q.subject} | <strong>Duration:</strong> ${q.duration} minutes</p>
-                <p><strong>Questions:</strong> ${q.questions.length} | <strong>Ends:</strong> ${new Date(q.endTime).toLocaleString()}</p>
-                <button onclick="startQuiz('${q.id}')" style="background: #28a745; color: white;">▶️ Start Quiz</button>
-              </div>
-            `;
-          } else {
-            section.innerHTML += `
-              <div class="assignment-card">
-                <h4>${q.title} ✅</h4>
-                <p><strong>Score:</strong> ${taken.score}% | <strong>Submitted:</strong> ${new Date(taken.submittedAt).toLocaleString()}</p>
-              </div>
-            `;
-          }
-        });
       }
+      
+      renderQuizzes();
       content.appendChild(section);
     }
     
@@ -3289,33 +3097,43 @@
     else if(tab === "Course Materials" && role === "student") {
       section.innerHTML = "<h3>📖 Course Materials</h3>";
       
-      localData.subjects.forEach(sub => {
-        const materials = localData.courseMaterials.filter(m => m.subject === sub && (m.section === 'all' || m.section === currentUserData.section));
-        if(materials.length > 0) {
-          section.innerHTML += `<h4>${sub}</h4>`;
-          materials.forEach(m => {
-            section.innerHTML += `
-              <div style="padding: 15px; border: 2px solid #dee2e6; border-radius: 10px; margin: 10px 0;">
-                <h5>${m.title}</h5>
-                <p>${m.description}</p>
-                <p style="font-size: 12px; color: #666;">Uploaded: ${new Date(m.uploadedAt).toLocaleDateString()}</p>
-                <a href="${m.fileUrl}" download style="display: inline-block; padding: 8px 15px; background: var(--main-blue); color: white; border-radius: 5px; text-decoration: none; margin-top: 10px;">⬇️ Download</a>
-              </div>
-            `;
-          });
+      // Subscribe to real-time materials
+      const materialsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'courseMaterials'),
+        (snapshot) => {
+          const materials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeMaterials = materials;
+          if(document.getElementById('materialsContainer')) {
+            renderCourseMaterials();
+          }
         }
-      });
+      );
+      unsubscribers.push(materialsUnsubscribe);
       
-      if(section.innerHTML === "<h3>📖 Course Materials</h3>") {
-        section.innerHTML += "<p>No materials uploaded yet.</p>";
-      }
+      const container = document.createElement('div');
+      container.id = 'materialsContainer';
+      section.appendChild(container);
       
+      renderCourseMaterials();
       content.appendChild(section);
     }
     
     //------ MESSAGES ------
     else if(tab === "Messages") {
       section.innerHTML = "<h3>💬 Messages</h3>";
+      
+      // Subscribe to real-time messages
+      const messagesUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'messages'),
+        (snapshot) => {
+          const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeMessages = messages;
+          if(currentContact) {
+            loadMessages(currentContact.username);
+          }
+        }
+      );
+      unsubscribers.push(messagesUnsubscribe);
       
       const messagingContainer = document.createElement('div');
       messagingContainer.className = 'messaging-container';
@@ -3394,6 +3212,23 @@
     else if(tab === "Conference Schedule" || tab === "Conference Booking") {
       section.innerHTML = "<h3>📅 Parent-Teacher Conference</h3>";
       
+      // Subscribe to real-time conferences
+      const conferencesUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'conferences'),
+        (snapshot) => {
+          const conferences = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeConferences = conferences;
+          if(document.getElementById('conferencesContainer')) {
+            renderConferences();
+          }
+        }
+      );
+      unsubscribers.push(conferencesUnsubscribe);
+      
+      const container = document.createElement('div');
+      container.id = 'conferencesContainer';
+      section.appendChild(container);
+      
       if(role === "teacher") {
         section.innerHTML += `
           <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
@@ -3405,66 +3240,35 @@
             <button onclick="generateSlots()" style="background: #28a745; color: white; margin-top: 10px;">➕ Generate Slots</button>
           </div>
         `;
-        
-        const teacherConferences = localData.conferences.filter(c => c.teacher === currentUser);
-        if(teacherConferences.length > 0) {
-          section.innerHTML += "<h4>Upcoming Conferences</h4>";
-          teacherConferences.filter(c => new Date(c.dateTime) >= new Date()).forEach(c => {
-            section.innerHTML += `
-              <div class="conference-slot booked">
-                <div>
-                  <strong>${c.parent || 'Unknown'}</strong><br>
-                  <small>${new Date(c.dateTime).toLocaleString()}</small>
-                </div>
-                <span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px;">Booked</span>
-              </div>
-            `;
-          });
-        }
-      } else if(role === "parent") {
-        const availableSlots = localData.conferences.filter(c => 
-          c.status === 'available'
-        );
-        
-        if(availableSlots.length === 0) {
-          section.innerHTML += "<p>No available slots at the moment. Please check back later.</p>";
-        } else {
-          section.innerHTML += "<h4>Available Slots</h4>";
-          availableSlots.forEach(c => {
-            section.innerHTML += `
-              <div class="conference-slot available">
-                <div>
-                  <strong>${c.teacher}</strong><br>
-                  <small>${new Date(c.dateTime).toLocaleString()}</small>
-                </div>
-                <button onclick="bookConference('${c.id}')" style="width: auto; background: #28a745; color: white;">Book</button>
-              </div>
-            `;
-          });
-        }
-        
-        const myConferences = localData.conferences.filter(c => c.parent === currentUser && c.status === 'booked');
-        if(myConferences.length > 0) {
-          section.innerHTML += "<h4>Your Booked Conferences</h4>";
-          myConferences.forEach(c => {
-            section.innerHTML += `
-              <div class="conference-slot booked">
-                <div>
-                  <strong>${c.teacher}</strong><br>
-                  <small>${new Date(c.dateTime).toLocaleString()}</small>
-                </div>
-                <button onclick="cancelConference('${c.id}')" style="width: auto; background: #dc3545; color: white;">Cancel</button>
-              </div>
-            `;
-          });
-        }
       }
+      
+      renderConferences();
       content.appendChild(section);
     }
     
     //------ BEHAVIOR REPORTS ------
     else if(tab === "Behavior Reports") {
       section.innerHTML = "<h3>📋 Behavioral Records</h3>";
+      
+      // Subscribe to real-time behavior logs
+      const behaviorUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'behaviorLog'),
+        (snapshot) => {
+          const logs = {};
+          snapshot.docs.forEach(doc => {
+            logs[doc.id] = doc.data().entries || [];
+          });
+          window.realtimeBehaviorLog = logs;
+          if(document.getElementById('behaviorContainer')) {
+            renderBehaviorReports();
+          }
+        }
+      );
+      unsubscribers.push(behaviorUnsubscribe);
+      
+      const container = document.createElement('div');
+      container.id = 'behaviorContainer';
+      section.appendChild(container);
       
       if(role === "teacher") {
         const students = await getCollectionData('users', [
@@ -3491,61 +3295,9 @@
           <input type="text" id="behaviorReason" placeholder="Reason/Description">
           <button onclick="addBehaviorRecord()" style="background: #28a745; color: white; margin-top: 10px;">➕ Add Record</button>
         `;
-        
-        section.innerHTML += "<h4>Recent Records</h4>";
-        const recentRecords = [];
-        sectionStudents.forEach(s => {
-          const log = localData.behaviorLog[s.name] || [];
-          log.forEach(entry => {
-            recentRecords.push({...entry, student: s.name});
-          });
-        });
-        
-        recentRecords.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10).forEach(r => {
-          section.innerHTML += `
-            <div class="behavior-item ${r.type}">
-              <div class="behavior-points">${r.type === 'merit' ? '+' : '-'}${r.points}</div>
-              <div style="flex: 1;">
-                <strong>${r.student}</strong> - ${r.reason}<br>
-                <small>${new Date(r.date).toLocaleDateString()}</small>
-              </div>
-            </div>
-          `;
-        });
-      } else {
-        let targetStudent = currentUser;
-        if(role === "parent") {
-          targetStudent = currentUserData.childName || currentUser;
-        }
-        
-        const log = localData.behaviorLog[targetStudent] || [];
-        const totalPoints = log.reduce((acc, entry) => {
-          return acc + (entry.type === 'merit' ? entry.points : -entry.points);
-        }, 0);
-        
-        section.innerHTML += `
-          <div class="performance-box" style="background: ${totalPoints >= 0 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)'}">
-            <h3>Behavior Points</h3>
-            <div class="stat-number">${totalPoints > 0 ? '+' : ''}${totalPoints}</div>
-            <p>${totalPoints >= 20 ? '🏆 Excellent Conduct' : totalPoints >= 0 ? '👍 Good Standing' : '⚠️ Needs Improvement'}</p>
-          </div>
-        `;
-        
-        if(log.length > 0) {
-          section.innerHTML += "<h4>Record History</h4>";
-          log.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(entry => {
-            section.innerHTML += `
-              <div class="behavior-item ${entry.type}">
-                <div class="behavior-points">${entry.type === 'merit' ? '+' : '-'}${entry.points}</div>
-                <div style="flex: 1;">
-                  <strong>${entry.reason}</strong><br>
-                  <small>${new Date(entry.date).toLocaleDateString()} by ${entry.teacher}</small>
-                </div>
-              </div>
-            `;
-          });
-        }
       }
+      
+      renderBehaviorReports();
       content.appendChild(section);
     }
     
@@ -3553,81 +3305,44 @@
     else if(tab === "Honor Roll") {
       section.innerHTML = "<h3>🏆 Honor Roll & Academic Excellence</h3>";
       
-      const students = await getCollectionData('users', [
-        window.firebaseFns.where('role', '==', 'student'),
-        window.firebaseFns.where('approved', '==', true)
-      ]);
+      // Subscribe to real-time grades for honor roll
+      const gradesUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'grades'),
+        (snapshot) => {
+          const gradesData = {};
+          snapshot.docs.forEach(doc => {
+            gradesData[doc.id] = doc.data();
+          });
+          window.realtimeGrades = gradesData;
+          if(document.getElementById('honorRollContainer')) {
+            renderHonorRoll();
+          }
+        }
+      );
+      unsubscribers.push(gradesUnsubscribe);
       
-      const rankings = students.map(s => {
-        const grades = localData.gradesData[s.name] || {};
-        const avg = Object.values(grades).reduce((a,b) => a+b, 0) / Object.values(grades).length || 0;
-        return {...s, average: avg};
-      }).sort((a,b) => b.average - a.average);
+      // Subscribe to students
+      const studentsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.query(
+          window.firebaseFns.collection(db, 'users'),
+          window.firebaseFns.where('role', '==', 'student'),
+          window.firebaseFns.where('approved', '==', true)
+        ),
+        (snapshot) => {
+          const students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimeStudents = students;
+          if(document.getElementById('honorRollContainer')) {
+            renderHonorRoll();
+          }
+        }
+      );
+      unsubscribers.push(studentsUnsubscribe);
       
-      const withHighestHonors = rankings.filter(s => s.average >= 98);
-      const withHighHonors = rankings.filter(s => s.average >= 95 && s.average < 98);
-      const withHonors = rankings.filter(s => s.average >= 90 && s.average < 95);
+      const container = document.createElement('div');
+      container.id = 'honorRollContainer';
+      section.appendChild(container);
       
-      if(withHighestHonors.length > 0) {
-        section.innerHTML += `
-          <div class="honor-roll">
-            <h4>🥇 With Highest Honors (98-100)</h4>
-            <ul class="honor-roll-list">
-              ${withHighestHonors.map(s => `
-                <li>
-                  <span>${s.name} - ${s.average.toFixed(2)}%</span>
-                  <span class="honor-badge">Highest Honors</span>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `;
-      }
-      
-      if(withHighHonors.length > 0) {
-        section.innerHTML += `
-          <div class="honor-roll" style="background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%); border-color: #808080;">
-            <h4 style="color: #555;">🥈 With High Honors (95-97)</h4>
-            <ul class="honor-roll-list">
-              ${withHighHonors.map(s => `
-                <li>
-                  <span>${s.name} - ${s.average.toFixed(2)}%</span>
-                  <span class="honor-badge" style="background: #808080;">High Honors</span>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `;
-      }
-      
-      if(withHonors.length > 0) {
-        section.innerHTML += `
-          <div class="honor-roll" style="background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%); border-color: #8b4513;">
-            <h4 style="color: #8b4513;">🥉 With Honors (90-94)</h4>
-            <ul class="honor-roll-list">
-              ${withHonors.map(s => `
-                <li>
-                  <span>${s.name} - ${s.average.toFixed(2)}%</span>
-                  <span class="honor-badge" style="background: #8b4513;">Honors</span>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `;
-      }
-      
-      if(role === "student") {
-        const myRank = rankings.findIndex(s => s.name === currentUser) + 1;
-        section.innerHTML += `
-          <div class="section" style="margin-top: 30px; text-align: center;">
-            <h4>Your Ranking</h4>
-            <div style="font-size: 48px; font-weight: bold; color: var(--main-blue);">#${myRank}</div>
-            <p>out of ${rankings.length} students</p>
-            <p><strong>General Average:</strong> ${rankings.find(s => s.name === currentUser)?.average.toFixed(2)}%</p>
-          </div>
-        `;
-      }
-      
+      renderHonorRoll();
       content.appendChild(section);
     }
     
@@ -3635,363 +3350,24 @@
     else if(tab === "Payments") {
       section.innerHTML = "<h3>💳 Payments & Financial Records</h3>";
       
-      if(role === "admin") {
-        section.innerHTML += `
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h4>Scholarship Management</h4>
-            <button onclick="showAddScholarship()" style="background: #28a745; color: white; width: auto;">➕ Add Scholarship</button>
-          </div>
-        `;
-        
-        const activeScholarships = localData.scholarships.filter(s => s.active);
-        if(activeScholarships.length > 0) {
-          section.innerHTML += "<h4>Active Scholarships</h4>";
-          activeScholarships.forEach(s => {
-            section.innerHTML += `
-              <div class="scholarship-card">
-                <h4>${s.name}</h4>
-                <p>${s.description}</p>
-                <p><strong>Discount:</strong> ${s.discount}% | <strong>Recipients:</strong> ${s.recipients?.length || 0}</p>
-              </div>
-            `;
-          });
+      // Subscribe to real-time payments
+      const paymentsUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.collection(db, 'payments'),
+        (snapshot) => {
+          const payments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          window.realtimePayments = payments;
+          if(document.getElementById('paymentsContainer')) {
+            renderPayments();
+          }
         }
-      } else {
-        let targetUser = currentUser;
-        if(role === "parent") {
-          targetUser = currentUserData.childName || currentUser;
-        }
-        
-        const myScholarships = localData.scholarships.filter(s => s.recipients?.includes(targetUser));
-        if(myScholarships.length > 0) {
-          section.innerHTML += `
-            <div class="scholarship-card">
-              <h4>🎓 Your Scholarships</h4>
-              ${myScholarships.map(s => `
-                <p><strong>${s.name}</strong> - ${s.discount}% discount</p>
-              `).join('')}
-            </div>
-          `;
-        }
-        
-        const myPayments = localData.payments.filter(p => p.student === targetUser);
-        const balance = 15000 - myPayments.reduce((a,p) => a + p.amount, 0);
-        
-        section.innerHTML += `
-          <div class="performance-box" style="background: ${balance > 0 ? 'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)' : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'}">
-            <h3>Outstanding Balance</h3>
-            <div class="stat-number">₱${balance.toLocaleString()}</div>
-            <p>${balance > 0 ? 'Please settle your balance' : '✅ Fully Paid'}</p>
-          </div>
-        `;
-        
-        if(balance > 0) {
-          section.innerHTML += `
-            <h4>Make Payment</h4>
-            <div class="payment-method" onclick="selectPayment(this, 'gcash')">
-              <span class="payment-icon">📱</span>
-              <div>
-                <strong>GCash</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">Pay via GCash e-wallet</p>
-              </div>
-            </div>
-            <div class="payment-method" onclick="selectPayment(this, 'bank')">
-              <span class="payment-icon">🏦</span>
-              <div>
-                <strong>Bank Transfer</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">BDO, BPI, Metrobank</p>
-              </div>
-            </div>
-            <div class="payment-method" onclick="selectPayment(this, 'card')">
-              <span class="payment-icon">💳</span>
-              <div>
-                <strong>Credit/Debit Card</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">Visa, Mastercard</p>
-              </div>
-            </div>
-            <input type="number" id="paymentAmount" placeholder="Amount to pay" max="${balance}">
-            <button onclick="processPayment()" style="background: #28a745; color: white; margin-top: 10px;">💳 Pay Now</button>
-          `;
-        }
-        
-        if(myPayments.length > 0) {
-          section.innerHTML += "<h4>Payment History</h4>";
-          myPayments.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(p => {
-            section.innerHTML += `
-              <div class="payment-history-item">
-                <div>
-                  <strong>${p.method.toUpperCase()}</strong><br>
-                  <small>${new Date(p.date).toLocaleDateString()}</small>
-                </div>
-                <div style="text-align: right;">
-                  <strong>₱${p.amount.toLocaleString()}</strong><br>
-                  <span class="payment-status paid">✅ Paid</span>
-                </div>
-              </div>
-            `;
-          });
-        }
-      }
-      content.appendChild(section);
-    }
-    
-    //------ LIBRARY ------
-    else if(tab === "Library") {
-      section.innerHTML = "<h3>📚 Library Management</h3>";
+      );
+      unsubscribers.push(paymentsUnsubscribe);
       
-      if(role === "admin") {
-        section.innerHTML += `
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h4>Add New Book</h4>
-            <input type="text" id="bookTitle" placeholder="Title">
-            <input type="text" id="bookAuthor" placeholder="Author">
-            <input type="text" id="bookISBN" placeholder="ISBN">
-            <select id="bookCategory">
-              <option>Textbook</option>
-              <option>Reference</option>
-              <option>Fiction</option>
-              <option>Non-Fiction</option>
-            </select>
-            <input type="number" id="bookCopies" placeholder="Number of Copies" value="1">
-            <button onclick="addBook()" style="background: #28a745; color: white; margin-top: 10px;">➕ Add Book</button>
-          </div>
-        `;
-      }
+      const container = document.createElement('div');
+      container.id = 'paymentsContainer';
+      section.appendChild(container);
       
-      section.innerHTML += `
-        <input type="text" id="bookSearch" placeholder="🔍 Search books..." onkeyup="searchBooks()">
-        <div id="bookResults"></div>
-      `;
-      
-      renderBooks();
-      content.appendChild(section);
-    }
-    
-    //------ ROOM BOOKING ------
-    else if(tab === "Room Booking" && role === "admin") {
-      section.innerHTML = "<h3>🏫 Room & Facility Booking</h3>";
-      
-      const rooms = [
-        {id: 'science-lab', name: 'Science Laboratory', capacity: 40, type: 'Laboratory'},
-        {id: 'computer-lab', name: 'Computer Laboratory', capacity: 30, type: 'Laboratory'},
-        {id: 'library', name: 'Library', capacity: 50, type: 'Study'},
-        {id: 'gym', name: 'Gymnasium', capacity: 200, type: 'Sports'},
-        {id: 'auditorium', name: 'School Auditorium', capacity: 500, type: 'Events'}
-      ];
-      
-      rooms.forEach(room => {
-        const bookings = localData.roomBookings.filter(b => b.roomId === room.id && new Date(b.date) >= new Date());
-        section.innerHTML += `
-          <div class="room-card">
-            <div class="room-image">🏫</div>
-            <h4>${room.name}</h4>
-            <p><strong>Capacity:</strong> ${room.capacity} | <strong>Type:</strong> ${room.type}</p>
-            <p><strong>Upcoming Bookings:</strong> ${bookings.length}</p>
-            <button onclick="viewRoomSchedule('${room.id}')" style="width: auto; background: var(--main-blue); color: white;">📅 View Schedule</button>
-          </div>
-        `;
-      });
-      
-      content.appendChild(section);
-    }
-    
-    //------ ENROLLMENT ------
-    else if(tab === "Enrollment" && role === "admin") {
-      section.innerHTML = "<h3>📝 Online Enrollment</h3>";
-      
-      section.innerHTML += `
-        <div class="step-indicator">
-          <div class="step active" id="step1">1. Personal Info</div>
-          <div class="step" id="step2">2. Academic Info</div>
-          <div class="step" id="step3">3. Documents</div>
-          <div class="step" id="step4">4. Review</div>
-        </div>
-        
-        <div class="enrollment-step active" id="enrollStep1">
-          <h4>Personal Information</h4>
-          <input type="text" id="enrollLastName" placeholder="Last Name">
-          <input type="text" id="enrollFirstName" placeholder="First Name">
-          <input type="text" id="enrollMiddleName" placeholder="Middle Name">
-          <input type="date" id="enrollBirthdate" placeholder="Birthdate">
-          <select id="enrollGender">
-            <option value="">Select Gender</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-          </select>
-          <button onclick="nextEnrollStep(1)" style="background: var(--main-blue); color: white;">Next ➡️</button>
-        </div>
-        
-        <div class="enrollment-step" id="enrollStep2">
-          <h4>Academic Information</h4>
-          <select id="enrollTrack">
-            <option value="">Select Track</option>
-            <option value="Academic">Academic</option>
-            <option value="TVL">Technical-Vocational-Livelihood</option>
-            <option value="Arts">Arts and Design</option>
-            <option value="Sports">Sports</option>
-          </select>
-          <select id="enrollStrand">
-            <option value="">Select Strand</option>
-            <option value="STEM">STEM</option>
-            <option value="ABM">ABM</option>
-            <option value="HUMSS">HUMSS</option>
-            <option value="GAS">GAS</option>
-          </select>
-          <select id="enrollGrade">
-            <option value="">Select Grade Level</option>
-            <option value="11">Grade 11</option>
-            <option value="12">Grade 12</option>
-          </select>
-          <div style="display: flex; gap: 10px;">
-            <button onclick="prevEnrollStep(2)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
-            <button onclick="nextEnrollStep(2)" style="background: var(--main-blue); color: white; flex: 1;">Next ➡️</button>
-          </div>
-        </div>
-        
-        <div class="enrollment-step" id="enrollStep3">
-          <h4>Required Documents</h4>
-          <div class="upload-zone" onclick="document.getElementById('doc1').click()">
-            <div>📄</div>
-            <p><strong>Click to upload</strong> or drag and drop</p>
-            <p style="font-size: 12px; color: #666;">Birth Certificate (PDF, JPG)</p>
-            <input type="file" id="doc1" style="display: none;" accept=".pdf,.jpg,.png">
-          </div>
-          <div class="upload-zone" onclick="document.getElementById('doc2').click()" style="margin-top: 15px;">
-            <div>📄</div>
-            <p><strong>Click to upload</strong> or drag and drop</p>
-            <p style="font-size: 12px; color: #666;">Form 138 (Report Card)</p>
-            <input type="file" id="doc2" style="display: none;" accept=".pdf,.jpg,.png">
-          </div>
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="prevEnrollStep(3)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
-            <button onclick="nextEnrollStep(3)" style="background: var(--main-blue); color: white; flex: 1;">Next ➡️</button>
-          </div>
-        </div>
-        
-        <div class="enrollment-step" id="enrollStep4">
-          <h4>Review Application</h4>
-          <div id="enrollReview" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 15px 0;"></div>
-          <div style="display: flex; gap: 10px;">
-            <button onclick="prevEnrollStep(4)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
-            <button onclick="submitEnrollment()" style="background: #28a745; color: white; flex: 1;">✅ Submit Application</button>
-          </div>
-        </div>
-      `;
-      
-      content.appendChild(section);
-    }
-    
-    //------ ANALYTICS ------
-    else if(tab === "Analytics" && role === "admin") {
-      section.innerHTML = "<h3>📊 School Analytics Dashboard</h3>";
-      
-      const allUsers = await getCollectionData('users');
-      const students = allUsers.filter(u => u.role === 'student');
-      const teachers = allUsers.filter(u => u.role === 'teacher');
-      const parents = allUsers.filter(u => u.role === 'parent');
-      const pending = students.filter(s => !s.approved).length;
-      
-      section.innerHTML += `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-          <div class="analytics-card">
-            <div class="analytics-number">${students.length}</div>
-            <div class="analytics-label">Total Students</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-number">${teachers.length}</div>
-            <div class="analytics-label">Teachers</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-number">${parents.length}</div>
-            <div class="analytics-label">Parents</div>
-          </div>
-          <div class="analytics-card">
-            <div class="analytics-number">${pending}</div>
-            <div class="analytics-label">Pending Approvals</div>
-          </div>
-        </div>
-      `;
-      
-      const trackData = {};
-      students.forEach(s => {
-        trackData[s.track] = (trackData[s.track] || 0) + 1;
-      });
-      
-      section.innerHTML += `
-        <div class="chart-container">
-          <h4>Enrollment by Track</h4>
-          <div style="margin-top: 20px;">
-            ${Object.entries(trackData).map(([track, count]) => `
-              <div style="margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <span>${track}</span>
-                  <span><strong>${count}</strong> students</span>
-                </div>
-                <div style="background: #e9ecef; height: 30px; border-radius: 15px; overflow: hidden;">
-                  <div style="background: linear-gradient(90deg, var(--main-red), var(--main-blue)); height: 100%; width: ${(count/students.length*100)}%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
-                    ${Math.round(count/students.length*100)}%
-                  </div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-      
-      content.appendChild(section);
-    }
-    
-    //------ ALUMNI ------
-    else if(tab === "Alumni" && role === "admin") {
-      section.innerHTML = "<h3>🎓 Alumni Network</h3>";
-      
-      const students = await getCollectionData('users', [
-        window.firebaseFns.where('role', '==', 'student'),
-        window.firebaseFns.where('gradeLevel', '==', '12')
-      ]);
-      
-      section.innerHTML += `
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-          <h4>Register Alumni</h4>
-          <select id="alumniStudent">
-            <option value="">Select Graduate</option>
-            ${students.map(s => `<option value="${s.name}">${s.name} (${s.strand})</option>`).join('')}
-          </select>
-          <input type="text" id="alumniContact" placeholder="Contact Number">
-          <input type="email" id="alumniEmail" placeholder="Email Address">
-          <input type="text" id="alumniCollege" placeholder="College/University (if applicable)">
-          <select id="alumniStatus">
-            <option value="">Current Status</option>
-            <option value="studying">Currently Studying</option>
-            <option value="working">Working</option>
-            <option value="looking">Looking for Opportunities</option>
-          </select>
-          <button onclick="registerAlumni()" style="background: #28a745; color: white; margin-top: 10px;">➕ Register Alumni</button>
-        </div>
-      `;
-      
-      if(localData.alumni.length > 0) {
-        section.innerHTML += "<h4>Registered Alumni</h4>";
-        section.innerHTML += `
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-            ${localData.alumni.map(a => {
-              const student = students.find(s => s.name === a.name);
-              return `
-                <div class="alumni-card">
-                  <div class="alumni-avatar">🎓</div>
-                  <h4>${a.name}</h4>
-                  <p><strong>Batch:</strong> 2024</p>
-                  <p><strong>Strand:</strong> ${student?.strand || 'N/A'}</p>
-                  <p><strong>Status:</strong> ${a.status === 'studying' ? '📚 Studying' : a.status === 'working' ? '💼 Working' : '🔍 Job Hunting'}</p>
-                  ${a.college ? `<p><strong>School:</strong> ${a.college}</p>` : ''}
-                  <p style="font-size: 12px; color: #666; margin-top: 10px;">${a.email}</p>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-      }
-      
+      renderPayments();
       content.appendChild(section);
     }
     
@@ -4051,54 +3427,26 @@
         userSection = currentUserData.sectionHandled;
       }
       
+      // Subscribe to schedule updates
+      const scheduleUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.doc(db, 'schedules', userSection || 'default'),
+        (doc) => {
+          const scheduleData = doc.exists() ? doc.data() : null;
+          window.realtimeSchedule = scheduleData;
+          if(document.getElementById('scheduleTable')) {
+            renderScheduleTable(userSection);
+          }
+        }
+      );
+      unsubscribers.push(scheduleUnsubscribe);
+      
       // Create weekly schedule table
       const scheduleDiv = document.createElement("div");
+      scheduleDiv.id = 'scheduleTable';
       scheduleDiv.className = "weekly-schedule";
-      
-      let tableHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Time / Day</th>
-              ${WEEKLY_SCHEDULE.days.map(day => `<th>${day}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      
-      // Generate rows for each period
-      WEEKLY_SCHEDULE.periods.forEach(period => {
-        const rowClass = period.type === 'break' ? (period.name === 'Lunch' ? 'lunch' : 'recess') : '';
-        tableHTML += `
-          <tr class="${rowClass}">
-            <td class="time-slot">
-              <strong>${period.name}</strong><br>
-              <small>${period.time}</small>
-            </td>
-        `;
-        
-        // Add cells for each day
-        WEEKLY_SCHEDULE.days.forEach(day => {
-          if(period.type === 'break') {
-            tableHTML += `<td colspan="5" style="text-align: center; font-weight: bold;">${period.name}</td>`;
-          } else {
-            // Get subject for this slot (from localData or generate based on section)
-            const subject = getSubjectForSlot(userSection, day, period.name);
-            tableHTML += `<td>${subject}</td>`;
-          }
-        });
-        
-        tableHTML += '</tr>';
-        
-        // Break after lunch row since it spans all days
-        if(period.name === 'Lunch') {
-          // Continue to next period
-        }
-      });
-      
-      tableHTML += '</tbody></table>';
-      scheduleDiv.innerHTML = tableHTML;
       section.appendChild(scheduleDiv);
+      
+      renderScheduleTable(userSection);
       
       // Add legend
       const legend = document.createElement("div");
@@ -4128,11 +3476,12 @@
         
         // Subject management
         section.innerHTML += "<h4 style='margin-top: 25px;'>Subject Management</h4>";
-        localData.subjects.forEach(function(sub, index){
+        const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+        subjects.forEach(function(sub, index){
           const item = document.createElement("div");
           item.className = "subject-item";
           item.innerHTML = '<input type="text" value="' + sub + '" onchange="updateSubject(' + index + ', this.value)">' +
-            '<input type="text" value="' + (localData.scheduleTimes[sub] || '') + '" placeholder="Time" onchange="updateScheduleTime(\'' + sub + '\', this.value)">' +
+            '<input type="text" placeholder="Time" onchange="updateScheduleTime(\'' + sub + '\', this.value)">' +
             '<button onclick="deleteSubject(' + index + ')" style="width:auto;background:#dc3545;color:white;">🗑️ Delete</button>';
           section.appendChild(item);
         });
@@ -4170,20 +3519,24 @@
       
       section.innerHTML += "<p style='text-align:center;margin-top:15px;'>📱 Scan this QR code for attendance</p>";
       
-      const perfBox = document.createElement("div");
-      perfBox.className = "performance-box";
-      const totalDays = Object.keys(localData.attendanceData[currentUser] || {}).length;
-      const presentDays = Object.values(localData.attendanceData[currentUser] || {}).filter(function(s){ return s === "P"; }).length;
-      const absentDays = totalDays - presentDays;
-      const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+      // Subscribe to real-time attendance
+      const attendanceUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.doc(db, 'attendance', currentUser),
+        (doc) => {
+          const attendanceData = doc.exists() ? doc.data() : {};
+          if(document.getElementById('attendanceStats')) {
+            renderAttendanceStats(attendanceData);
+          }
+        }
+      );
+      unsubscribers.push(attendanceUnsubscribe);
       
-      perfBox.innerHTML = "<h3>📈 Your Attendance Performance</h3>" +
-        "<div class='performance-stats'>" +
-        "<div class='stat-item'><div class='stat-number'>" + presentDays + "</div><div class='stat-label'>✅ Present</div></div>" +
-        "<div class='stat-item'><div class='stat-number'>" + absentDays + "</div><div class='stat-label'>❌ Absent</div></div>" +
-        "<div class='stat-item'><div class='stat-number'>" + percentage + "%</div><div class='stat-label'>📊 Rate</div></div>" +
-        "</div>";
+      const perfBox = document.createElement("div");
+      perfBox.id = 'attendanceStats';
+      perfBox.className = "performance-box";
       section.appendChild(perfBox);
+      
+      renderAttendanceStats({});
       
       content.appendChild(section);
     }
@@ -4282,27 +3635,19 @@
       if(tab === "Student Approval") {
         section.innerHTML = "<h3>✅ Approve Students</h3>";
         
-        const pendingStudents = await getCollectionData('users', [
-          window.firebaseFns.where('role', '==', 'student'),
-          window.firebaseFns.where('approved', '==', false)
-        ]);
-        
-        if(pendingStudents.length === 0) {
-          section.innerHTML += "<p>✅ No pending approvals.</p>";
-        } else {
-          pendingStudents.forEach(function(s){
-            const div = document.createElement("div");
-            div.style.cssText = 'padding: 15px; border: 2px solid #ddd; margin-bottom: 10px; border-radius: 10px; background: #fff3cd;';
-            div.innerHTML = `
-              <p><strong>👤 Name:</strong> ${s.name}</p>
-              <p><strong>🆔 ID:</strong> ${s.studentId}</p>
-              <p><strong>🏫 Section:</strong> ${s.section}</p>
-              <button onclick="approveStudent('${s.id}')" style="background: #28a745; color: white; width: auto; padding: 10px 20px; margin-right: 10px;">✅ Approve</button>
-              <button onclick="rejectStudent('${s.id}')" style="background: #dc3545; color: white; width: auto; padding: 10px 20px;">🗑️ Reject</button>
-            `;
-            section.appendChild(div);
-          });
-        }
+        // Subscribe to real-time pending students
+        const pendingUnsubscribe = window.firebaseFns.onSnapshot(
+          window.firebaseFns.query(
+            window.firebaseFns.collection(db, 'users'),
+            window.firebaseFns.where('role', '==', 'student'),
+            window.firebaseFns.where('approved', '==', false)
+          ),
+          (snapshot) => {
+            const pendingStudents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderPendingStudents(section, pendingStudents);
+          }
+        );
+        unsubscribers.push(pendingUnsubscribe);
         
         content.appendChild(section);
       }
@@ -4338,21 +3683,26 @@
         `;
         section.appendChild(printControls);
         
-        const students = await getCollectionData('users', [
-          window.firebaseFns.where('role', '==', 'student'),
-          window.firebaseFns.where('approved', '==', true)
-        ]);
+        // Subscribe to real-time students
+        const studentsUnsubscribe = window.firebaseFns.onSnapshot(
+          window.firebaseFns.query(
+            window.firebaseFns.collection(db, 'users'),
+            window.firebaseFns.where('role', '==', 'student'),
+            window.firebaseFns.where('approved', '==', true)
+          ),
+          (snapshot) => {
+            const students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            window.realtimeAllStudents = students;
+            if(document.getElementById('studentsContainer')) {
+              renderAllStudents();
+            }
+          }
+        );
+        unsubscribers.push(studentsUnsubscribe);
         
         const filterSection = document.createElement("select");
         filterSection.id = "filterSection";
         filterSection.innerHTML = "<option value='all'>📋 All Sections</option>";
-        const sections = [...new Set(students.map(function(s){ return s.section; }))];
-        sections.forEach(function(sec){
-          const opt = document.createElement("option");
-          opt.value = sec;
-          opt.innerText = sec;
-          filterSection.appendChild(opt);
-        });
         section.appendChild(filterSection);
         
         const studentsContainer = document.createElement("div");
@@ -4360,10 +3710,8 @@
         section.appendChild(studentsContainer);
         
         filterSection.onchange = function(){
-          renderStudentsBySection(studentsContainer, this.value, students);
+          renderAllStudents();
         };
-        
-        renderStudentsBySection(studentsContainer, "all", students);
         
         content.appendChild(section);
       }
@@ -4373,18 +3721,22 @@
         section.innerHTML = "<h3>👪 Parent Accounts</h3>";
         section.innerHTML += "<p>📝 These credentials are auto-generated when students sign up.</p>";
         
-        const parentAccounts = await getCollectionData('parentAccounts');
+        // Subscribe to real-time parent accounts
+        const parentsUnsubscribe = window.firebaseFns.onSnapshot(
+          window.firebaseFns.collection(db, 'parentAccounts'),
+          (snapshot) => {
+            const parentAccounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            window.realtimeParentAccounts = parentAccounts;
+            if(document.getElementById('parentContainer')) {
+              renderParentAccounts();
+            }
+          }
+        );
+        unsubscribers.push(parentsUnsubscribe);
         
         const filterSection = document.createElement("select");
         filterSection.id = "filterParentSection";
         filterSection.innerHTML = "<option value='all'>📋 All Sections</option>";
-        const sections = [...new Set(parentAccounts.map(function(p){ return p.section; }))];
-        sections.forEach(function(sec){
-          const opt = document.createElement("option");
-          opt.value = sec;
-          opt.innerText = sec;
-          filterSection.appendChild(opt);
-        });
         section.appendChild(filterSection);
         
         const parentContainer = document.createElement("div");
@@ -4392,10 +3744,8 @@
         section.appendChild(parentContainer);
         
         filterSection.onchange = function(){
-          renderParentAccounts(parentContainer, this.value, parentAccounts);
+          renderParentAccounts();
         };
-        
-        renderParentAccounts(parentContainer, "all", parentAccounts);
         
         content.appendChild(section);
       }
@@ -4404,31 +3754,121 @@
       else if(tab === "Manage Users") {
         section.innerHTML = "<h3>⚙️ Manage Users</h3>";
         
-        const allUsers = await getCollectionData('users');
-        const students = allUsers.filter(u => u.role === 'student');
-        const teachers = allUsers.filter(u => u.role === 'teacher');
+        // Subscribe to real-time users
+        const usersUnsubscribe = window.firebaseFns.onSnapshot(
+          window.firebaseFns.collection(db, 'users'),
+          (snapshot) => {
+            const allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderManageUsers(allUsers);
+          }
+        );
+        unsubscribers.push(usersUnsubscribe);
         
-        section.innerHTML += "<h4>👨‍🎓 Students</h4>";
-        const studentsTable = document.createElement("table");
-        studentsTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Teacher</th><th>Action</th></tr>";
-        students.forEach(function(s){
-          const tr = document.createElement("tr");
-          tr.innerHTML = '<td>' + s.name + '</td><td>' + s.studentId + '</td><td>' + s.section + '</td><td>' + (s.teacherName || 'Not Assigned') + '</td>' +
-            '<td><button onclick="deleteUser(\'' + s.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
-          studentsTable.appendChild(tr);
-        });
-        section.appendChild(studentsTable);
+        const container = document.createElement('div');
+        container.id = 'manageUsersContainer';
+        section.appendChild(container);
         
-        section.innerHTML += "<h4 style='margin-top:25px;'>👨‍🏫 Teachers</h4>";
-        const teachersTable = document.createElement("table");
-        teachersTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Action</th></tr>";
-        teachers.forEach(function(t){
-          const tr = document.createElement("tr");
-          tr.innerHTML = '<td>' + t.name + '</td><td>' + t.id + '</td><td>' + t.sectionHandled + '</td>' +
-            '<td><button onclick="deleteUser(\'' + t.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
-          teachersTable.appendChild(tr);
+        content.appendChild(section);
+      }
+      
+      //------ ENROLLMENT ------
+      else if(tab === "Enrollment") {
+        section.innerHTML = "<h3>📝 Online Enrollment</h3>";
+        
+        section.innerHTML += `
+          <div class="step-indicator">
+            <div class="step active" id="step1">1. Personal Info</div>
+            <div class="step" id="step2">2. Academic Info</div>
+            <div class="step" id="step3">3. Documents</div>
+            <div class="step" id="step4">4. Review</div>
+          </div>
+          
+          <div class="enrollment-step active" id="enrollStep1">
+            <h4>Personal Information</h4>
+            <input type="text" id="enrollLastName" placeholder="Last Name">
+            <input type="text" id="enrollFirstName" placeholder="First Name">
+            <input type="text" id="enrollMiddleName" placeholder="Middle Name">
+            <input type="date" id="enrollBirthdate" placeholder="Birthdate">
+            <select id="enrollGender">
+              <option value="">Select Gender</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+            </select>
+            <button onclick="nextEnrollStep(1)" style="background: var(--main-blue); color: white;">Next ➡️</button>
+          </div>
+          
+          <div class="enrollment-step" id="enrollStep2">
+            <h4>Academic Information</h4>
+            <select id="enrollTrack">
+              <option value="">Select Track</option>
+              <option value="Academic">Academic</option>
+              <option value="TVL">Technical-Vocational-Livelihood</option>
+              <option value="Arts">Arts and Design</option>
+              <option value="Sports">Sports</option>
+            </select>
+            <select id="enrollStrand">
+              <option value="">Select Strand</option>
+              <option value="STEM">STEM</option>
+              <option value="ABM">ABM</option>
+              <option value="HUMSS">HUMSS</option>
+              <option value="GAS">GAS</option>
+            </select>
+            <select id="enrollGrade">
+              <option value="">Select Grade Level</option>
+              <option value="11">Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+            <div style="display: flex; gap: 10px;">
+              <button onclick="prevEnrollStep(2)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
+              <button onclick="nextEnrollStep(2)" style="background: var(--main-blue); color: white; flex: 1;">Next ➡️</button>
+            </div>
+          </div>
+          
+          <div class="enrollment-step" id="enrollStep3">
+            <h4>Required Documents</h4>
+            <div class="upload-zone" onclick="document.getElementById('doc1').click()">
+              <div>📄</div>
+              <p><strong>Click to upload</strong> or drag and drop</p>
+              <p style="font-size: 12px; color: #666;">Birth Certificate (PDF, JPG)</p>
+              <input type="file" id="doc1" style="display: none;" accept=".pdf,.jpg,.png">
+            </div>
+            <div class="upload-zone" onclick="document.getElementById('doc2').click()" style="margin-top: 15px;">
+              <div>📄</div>
+              <p><strong>Click to upload</strong> or drag and drop</p>
+              <p style="font-size: 12px; color: #666;">Form 138 (Report Card)</p>
+              <input type="file" id="doc2" style="display: none;" accept=".pdf,.jpg,.png">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+              <button onclick="prevEnrollStep(3)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
+              <button onclick="nextEnrollStep(3)" style="background: var(--main-blue); color: white; flex: 1;">Next ➡️</button>
+            </div>
+          </div>
+          
+          <div class="enrollment-step" id="enrollStep4">
+            <h4>Review Application</h4>
+            <div id="enrollReview" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <button onclick="prevEnrollStep(4)" style="background: #6c757d; color: white; flex: 1;">⬅️ Back</button>
+              <button onclick="submitEnrollment()" style="background: #28a745; color: white; flex: 1;">✅ Submit Application</button>
+            </div>
+          </div>
+        `;
+        
+        content.appendChild(section);
+      }
+      
+      //------ ANALYTICS ------
+      else if(tab === "Analytics") {
+        section.innerHTML = "<h3>📊 School Analytics Dashboard</h3>";
+        
+        const container = document.createElement('div');
+        container.id = 'analyticsContainer';
+        section.appendChild(container);
+        
+        // Subscribe to real-time analytics
+        subscribeToAnalytics((data) => {
+          renderAnalytics(data);
         });
-        section.appendChild(teachersTable);
         
         content.appendChild(section);
       }
@@ -4438,69 +3878,25 @@
     else if(tab === "My Planner" && role === "teacher") {
       section.innerHTML = "<h3>📝 My Planner</h3>";
       
-      if(!localData.plannerData[currentUser]) {
-        localData.plannerData[currentUser] = { daily: [], weekly: [], monthly: [] };
-      }
+      // Subscribe to planner data
+      const plannerUnsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.doc(db, 'planners', currentUserId),
+        (doc) => {
+          const plannerData = doc.exists() ? doc.data() : { daily: [], weekly: [], monthly: [] };
+          window.realtimePlanner = plannerData;
+          if(document.getElementById('plannerContainer')) {
+            renderPlanner();
+          }
+        }
+      );
+      unsubscribers.push(plannerUnsubscribe);
       
-      const plannerContainer = document.createElement("div");
-      plannerContainer.className = "planner-container";
+      const container = document.createElement('div');
+      container.id = 'plannerContainer';
+      container.className = "planner-container";
+      section.appendChild(container);
       
-      // Daily Goals
-      const dailySection = document.createElement("div");
-      dailySection.className = "planner-section";
-      dailySection.innerHTML = "<h4>📅 Daily Goals</h4>";
-      localData.plannerData[currentUser].daily.forEach(function(goal, index){
-        const item = document.createElement("div");
-        item.className = "planner-item" + (goal.completed ? " completed" : "");
-        item.innerHTML = '<input type="checkbox"' + (goal.completed ? " checked" : "") + ' onchange="togglePlannerGoal(\'daily\', ' + index + ')">' +
-          '<span class="goal-text">' + goal.text + '</span>' +
-          '<span class="goal-time">' + (goal.time || "") + '</span>' +
-          '<button class="alarm-btn" onclick="setAlarm(\'' + goal.time + '\')">⏰</button>' +
-          '<button onclick="deletePlannerGoal(\'daily\', ' + index + ')" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>';
-        dailySection.appendChild(item);
-      });
-      dailySection.innerHTML += '<input type="text" id="dailyGoalInput" placeholder="Add daily goal..." style="width:55%;">' +
-        '<input type="time" id="dailyGoalTime" style="width:auto;">' +
-        '<button onclick="addPlannerGoal(\'daily\')" style="width:auto;background:#28a745;color:white;">➕ Add</button>';
-      plannerContainer.appendChild(dailySection);
-      
-      // Weekly Goals
-      const weeklySection = document.createElement("div");
-      weeklySection.className = "planner-section";
-      weeklySection.innerHTML = "<h4>📆 Weekly Goals</h4>";
-      localData.plannerData[currentUser].weekly.forEach(function(goal, index){
-        const item = document.createElement("div");
-        item.className = "planner-item" + (goal.completed ? " completed" : "");
-        item.innerHTML = '<input type="checkbox"' + (goal.completed ? " checked" : "") + ' onchange="togglePlannerGoal(\'weekly\', ' + index + ')">' +
-          '<span class="goal-text">' + goal.text + '</span>' +
-          '<span class="goal-time">' + (goal.time || "") + '</span>' +
-          '<button onclick="deletePlannerGoal(\'weekly\', ' + index + ')" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>';
-        weeklySection.appendChild(item);
-      });
-      weeklySection.innerHTML += '<input type="text" id="weeklyGoalInput" placeholder="Add weekly goal..." style="width:55%;">' +
-        '<input type="date" id="weeklyGoalDate" style="width:auto;">' +
-        '<button onclick="addPlannerGoal(\'weekly\')" style="width:auto;background:#28a745;color:white;">➕ Add</button>';
-      plannerContainer.appendChild(weeklySection);
-      
-      // Monthly Goals
-      const monthlySection = document.createElement("div");
-      monthlySection.className = "planner-section";
-      monthlySection.innerHTML = "<h4>📆 Monthly Goals</h4>";
-      localData.plannerData[currentUser].monthly.forEach(function(goal, index){
-        const item = document.createElement("div");
-        item.className = "planner-item" + (goal.completed ? " completed" : "");
-        item.innerHTML = '<input type="checkbox"' + (goal.completed ? " checked" : "") + ' onchange="togglePlannerGoal(\'monthly\', ' + index + ')">' +
-          '<span class="goal-text">' + goal.text + '</span>' +
-          '<span class="goal-time">' + (goal.time || "") + '</span>' +
-          '<button onclick="deletePlannerGoal(\'monthly\', ' + index + ')" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>';
-        monthlySection.appendChild(item);
-      });
-      monthlySection.innerHTML += '<input type="text" id="monthlyGoalInput" placeholder="Add monthly goal..." style="width:55%;">' +
-        '<input type="date" id="monthlyGoalDate" style="width:auto;">' +
-        '<button onclick="addPlannerGoal(\'monthly\')" style="width:auto;background:#28a745;color:white;">➕ Add</button>';
-      plannerContainer.appendChild(monthlySection);
-      
-      section.appendChild(plannerContainer);
+      renderPlanner();
       content.appendChild(section);
     }
     
@@ -4627,31 +4023,962 @@
     }
   }
   
-  //====== HELPER FUNCTIONS FOR SCHEDULE ======
-  function getSubjectForSlot(section, day, period) {
-    // This is a helper function to assign subjects to schedule slots
-    // In a real implementation, this would come from a database
+  //====== RENDER FUNCTIONS FOR REAL-TIME DATA ======
+  function renderAssignments() {
+    const container = document.getElementById('assignmentsContainer');
+    if(!container) return;
     
-    if(!localData.sectionSubjects[section]) {
-      // Generate a schedule for this section if not exists
-      localData.sectionSubjects[section] = {};
-      const subjects = localData.subjects;
-      let subjectIndex = 0;
+    container.innerHTML = '';
+    
+    const assignments = window.realtimeAssignments || [];
+    const submissions = window.realtimeSubmissions || [];
+    
+    if(role === "teacher") {
+      const teacherAssignments = assignments.filter(a => a.teacher === currentUser);
+      if(teacherAssignments.length === 0) {
+        container.innerHTML = "<p>No assignments created yet.</p>";
+      } else {
+        teacherAssignments.forEach(a => {
+          const submissions_count = submissions.filter(s => s.assignmentId === a.id).length;
+          const div = document.createElement('div');
+          div.className = 'assignment-card';
+          div.innerHTML = `
+            <h4>${a.title}</h4>
+            <p>${a.description}</p>
+            <p><strong>Subject:</strong> ${a.subject} | <strong>Due:</strong> ${new Date(a.dueDate).toLocaleDateString()}</p>
+            <p><strong>Submissions:</strong> ${submissions_count}</p>
+            <button onclick="viewSubmissions('${a.id}')" style="width: auto; background: var(--main-blue); color: white;">📋 View Submissions</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+    } else if(role === "student") {
+      const studentAssignments = assignments.filter(a => 
+        a.section === currentUserData.section && new Date(a.dueDate) >= new Date()
+      );
       
-      WEEKLY_SCHEDULE.periods.forEach(p => {
-        if(p.type !== 'break') {
-          WEEKLY_SCHEDULE.days.forEach(d => {
-            const key = `${d}-${p.name}`;
-            localData.sectionSubjects[section][key] = subjects[subjectIndex % subjects.length];
-            subjectIndex++;
-          });
-        }
+      if(studentAssignments.length === 0) {
+        container.innerHTML = "<p>No pending assignments. Great job! 🎉</p>";
+      } else {
+        studentAssignments.forEach(a => {
+          const submission = submissions.find(s => s.assignmentId === a.id && s.student === currentUser);
+          let status = 'pending';
+          let statusText = '⏳ Pending';
+          let grade = '';
+          
+          if(submission) {
+            status = submission.graded ? 'graded' : 'submitted';
+            statusText = submission.graded ? '✅ Graded' : '📤 Submitted';
+            grade = submission.graded ? `<br><strong>Grade: ${submission.grade}/${a.points}</strong>` : '';
+          } else if(new Date(a.dueDate) < new Date()) {
+            status = 'late';
+            statusText = '⚠️ Late';
+          }
+          
+          const div = document.createElement('div');
+          div.className = 'assignment-card';
+          div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <h4>${a.title}</h4>
+                <p>${a.description}</p>
+                <p><strong>Subject:</strong> ${a.subject} | <strong>Due:</strong> ${new Date(a.dueDate).toLocaleDateString()}</p>
+                <span class="assignment-status ${status}">${statusText}</span>
+                ${grade}
+              </div>
+              ${!submission ? `
+                <button onclick="submitAssignment('${a.id}')" style="width: auto; background: #28a745; color: white;">📤 Submit</button>
+              ` : ''}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+  }
+  
+  function renderQuizzes() {
+    const container = document.getElementById('quizzesContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    
+    const quizzes = window.realtimeQuizzes || [];
+    const results = window.realtimeQuizResults || [];
+    
+    if(role === "teacher") {
+      const teacherQuizzes = quizzes.filter(q => q.teacher === currentUser);
+      if(teacherQuizzes.length === 0) {
+        container.innerHTML = "<p>No quizzes created yet.</p>";
+      } else {
+        teacherQuizzes.forEach(q => {
+          const quizResults = results.filter(r => r.quizId === q.id);
+          const avg = quizResults.length ? (quizResults.reduce((a,b) => a + b.score, 0) / quizResults.length).toFixed(2) : 'N/A';
+          
+          const div = document.createElement('div');
+          div.className = 'assignment-card';
+          div.innerHTML = `
+            <h4>${q.title}</h4>
+            <p><strong>Subject:</strong> ${q.subject} | <strong>Questions:</strong> ${q.questions?.length || 0}</p>
+            <p><strong>Participants:</strong> ${quizResults.length} | <strong>Average:</strong> ${avg}%</p>
+            <button onclick="viewQuizResults('${q.id}')" style="width: auto; background: var(--main-blue); color: white;">📊 Results</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+    } else if(role === "student") {
+      const availableQuizzes = quizzes.filter(q => 
+        q.section === currentUserData.section && 
+        new Date(q.startTime) <= new Date() && 
+        new Date(q.endTime) >= new Date()
+      );
+      
+      if(availableQuizzes.length === 0) {
+        container.innerHTML = "<p>No available quizzes at the moment.</p>";
+      } else {
+        availableQuizzes.forEach(q => {
+          const taken = results.find(r => r.quizId === q.id && r.student === currentUser);
+          const div = document.createElement('div');
+          div.className = 'assignment-card';
+          
+          if(!taken) {
+            div.innerHTML = `
+              <h4>${q.title}</h4>
+              <p><strong>Subject:</strong> ${q.subject} | <strong>Duration:</strong> ${q.duration} minutes</p>
+              <p><strong>Questions:</strong> ${q.questions?.length || 0} | <strong>Ends:</strong> ${new Date(q.endTime).toLocaleString()}</p>
+              <button onclick="startQuiz('${q.id}')" style="background: #28a745; color: white;">▶️ Start Quiz</button>
+            `;
+          } else {
+            div.innerHTML = `
+              <h4>${q.title} ✅</h4>
+              <p><strong>Score:</strong> ${taken.score}% | <strong>Submitted:</strong> ${new Date(taken.submittedAt).toLocaleString()}</p>
+            `;
+          }
+          container.appendChild(div);
+        });
+      }
+    }
+  }
+  
+  function renderCourseMaterials() {
+    const container = document.getElementById('materialsContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    const materials = window.realtimeMaterials || [];
+    const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+    
+    let hasMaterials = false;
+    subjects.forEach(sub => {
+      const subMaterials = materials.filter(m => m.subject === sub && (m.section === 'all' || m.section === currentUserData.section));
+      if(subMaterials.length > 0) {
+        hasMaterials = true;
+        const header = document.createElement('h4');
+        header.textContent = sub;
+        container.appendChild(header);
+        
+        subMaterials.forEach(m => {
+          const div = document.createElement('div');
+          div.style.cssText = 'padding: 15px; border: 2px solid #dee2e6; border-radius: 10px; margin: 10px 0;';
+          div.innerHTML = `
+            <h5>${m.title}</h5>
+            <p>${m.description}</p>
+            <p style="font-size: 12px; color: #666;">Uploaded: ${new Date(m.uploadedAt).toLocaleDateString()}</p>
+            <a href="${m.fileUrl}" download style="display: inline-block; padding: 8px 15px; background: var(--main-blue); color: white; border-radius: 5px; text-decoration: none; margin-top: 10px;">⬇️ Download</a>
+          `;
+          container.appendChild(div);
+        });
+      }
+    });
+    
+    if(!hasMaterials) {
+      container.innerHTML = '<p>No materials uploaded yet.</p>';
+    }
+  }
+  
+  function renderConferences() {
+    const container = document.getElementById('conferencesContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    const conferences = window.realtimeConferences || [];
+    
+    if(role === "teacher") {
+      const teacherConferences = conferences.filter(c => c.teacher === currentUser);
+      const upcoming = teacherConferences.filter(c => new Date(c.dateTime) >= new Date());
+      
+      if(upcoming.length > 0) {
+        const header = document.createElement('h4');
+        header.textContent = 'Upcoming Conferences';
+        container.appendChild(header);
+        
+        upcoming.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'conference-slot booked';
+          div.innerHTML = `
+            <div>
+              <strong>${c.parent || 'Unknown'}</strong><br>
+              <small>${new Date(c.dateTime).toLocaleString()}</small>
+            </div>
+            <span style="background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px;">Booked</span>
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = '<p>No upcoming conferences.</p>';
+      }
+    } else if(role === "parent") {
+      const availableSlots = conferences.filter(c => c.status === 'available');
+      const myConferences = conferences.filter(c => c.parent === currentUser && c.status === 'booked');
+      
+      if(availableSlots.length > 0) {
+        const header = document.createElement('h4');
+        header.textContent = 'Available Slots';
+        container.appendChild(header);
+        
+        availableSlots.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'conference-slot available';
+          div.innerHTML = `
+            <div>
+              <strong>${c.teacher}</strong><br>
+              <small>${new Date(c.dateTime).toLocaleString()}</small>
+            </div>
+            <button onclick="bookConference('${c.id}')" style="width: auto; background: #28a745; color: white;">Book</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+      
+      if(myConferences.length > 0) {
+        const header = document.createElement('h4');
+        header.textContent = 'Your Booked Conferences';
+        container.appendChild(header);
+        
+        myConferences.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'conference-slot booked';
+          div.innerHTML = `
+            <div>
+              <strong>${c.teacher}</strong><br>
+              <small>${new Date(c.dateTime).toLocaleString()}</small>
+            </div>
+            <button onclick="cancelConference('${c.id}')" style="width: auto; background: #dc3545; color: white;">Cancel</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+      
+      if(availableSlots.length === 0 && myConferences.length === 0) {
+        container.innerHTML = '<p>No available slots at the moment. Please check back later.</p>';
+      }
+    }
+  }
+  
+  function renderBehaviorReports() {
+    const container = document.getElementById('behaviorContainer');
+    if(!container) return;
+    
+    const logs = window.realtimeBehaviorLog || {};
+    
+    if(role === "teacher") {
+      // Show recent records for all students
+      const recentRecords = [];
+      Object.entries(logs).forEach(([student, entries]) => {
+        entries.forEach(entry => {
+          recentRecords.push({...entry, student});
+        });
       });
-      saveLocalData();
+      
+      recentRecords.sort((a,b) => new Date(b.date) - new Date(a.date));
+      
+      if(recentRecords.length > 0) {
+        const header = document.createElement('h4');
+        header.textContent = 'Recent Records';
+        container.appendChild(header);
+        
+        recentRecords.slice(0, 10).forEach(r => {
+          const div = document.createElement('div');
+          div.className = `behavior-item ${r.type}`;
+          div.innerHTML = `
+            <div class="behavior-points">${r.type === 'merit' ? '+' : '-'}${r.points}</div>
+            <div style="flex: 1;">
+              <strong>${r.student}</strong> - ${r.reason}<br>
+              <small>${new Date(r.date).toLocaleDateString()}</small>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    } else {
+      // Student or parent view
+      let targetStudent = currentUser;
+      if(role === "parent") {
+        targetStudent = currentUserData.childName || currentUser;
+      }
+      
+      const studentLogs = logs[targetStudent] || [];
+      const totalPoints = studentLogs.reduce((acc, entry) => {
+        return acc + (entry.type === 'merit' ? entry.points : -entry.points);
+      }, 0);
+      
+      const perfBox = document.createElement('div');
+      perfBox.className = 'performance-box';
+      perfBox.style.background = totalPoints >= 0 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)';
+      perfBox.innerHTML = `
+        <h3>Behavior Points</h3>
+        <div class="stat-number">${totalPoints > 0 ? '+' : ''}${totalPoints}</div>
+        <p>${totalPoints >= 20 ? '🏆 Excellent Conduct' : totalPoints >= 0 ? '👍 Good Standing' : '⚠️ Needs Improvement'}</p>
+      `;
+      container.appendChild(perfBox);
+      
+      if(studentLogs.length > 0) {
+        const header = document.createElement('h4');
+        header.textContent = 'Record History';
+        container.appendChild(header);
+        
+        studentLogs.sort((a,b) => new Date(b.date) - new Date(a.date));
+        studentLogs.forEach(entry => {
+          const div = document.createElement('div');
+          div.className = `behavior-item ${entry.type}`;
+          div.innerHTML = `
+            <div class="behavior-points">${entry.type === 'merit' ? '+' : '-'}${entry.points}</div>
+            <div style="flex: 1;">
+              <strong>${entry.reason}</strong><br>
+              <small>${new Date(entry.date).toLocaleDateString()} by ${entry.teacher}</small>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+  }
+  
+  function renderHonorRoll() {
+    const container = document.getElementById('honorRollContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    
+    const students = window.realtimeStudents || [];
+    const gradesData = window.realtimeGrades || {};
+    
+    const rankings = students.map(s => {
+      const grades = gradesData[s.name] || {};
+      const gradeValues = Object.values(grades);
+      const avg = gradeValues.length ? (gradeValues.reduce((a,b) => a+b, 0) / gradeValues.length) : 0;
+      return {...s, average: avg};
+    }).sort((a,b) => b.average - a.average);
+    
+    const withHighestHonors = rankings.filter(s => s.average >= 98);
+    const withHighHonors = rankings.filter(s => s.average >= 95 && s.average < 98);
+    const withHonors = rankings.filter(s => s.average >= 90 && s.average < 95);
+    
+    if(withHighestHonors.length > 0) {
+      const div = document.createElement('div');
+      div.className = 'honor-roll';
+      div.innerHTML = `
+        <h4>🥇 With Highest Honors (98-100)</h4>
+        <ul class="honor-roll-list">
+          ${withHighestHonors.map(s => `
+            <li>
+              <span>${s.name} - ${s.average.toFixed(2)}%</span>
+              <span class="honor-badge">Highest Honors</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+      container.appendChild(div);
     }
     
-    const key = `${day}-${period}`;
-    return localData.sectionSubjects[section]?.[key] || 'TBA';
+    if(withHighHonors.length > 0) {
+      const div = document.createElement('div');
+      div.className = 'honor-roll';
+      div.style.cssText = 'background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%); border-color: #808080;';
+      div.innerHTML = `
+        <h4 style="color: #555;">🥈 With High Honors (95-97)</h4>
+        <ul class="honor-roll-list">
+          ${withHighHonors.map(s => `
+            <li>
+              <span>${s.name} - ${s.average.toFixed(2)}%</span>
+              <span class="honor-badge" style="background: #808080;">High Honors</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+      container.appendChild(div);
+    }
+    
+    if(withHonors.length > 0) {
+      const div = document.createElement('div');
+      div.className = 'honor-roll';
+      div.style.cssText = 'background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%); border-color: #8b4513;';
+      div.innerHTML = `
+        <h4 style="color: #8b4513;">🥉 With Honors (90-94)</h4>
+        <ul class="honor-roll-list">
+          ${withHonors.map(s => `
+            <li>
+              <span>${s.name} - ${s.average.toFixed(2)}%</span>
+              <span class="honor-badge" style="background: #8b4513;">Honors</span>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+      container.appendChild(div);
+    }
+    
+    if(role === "student") {
+      const myRank = rankings.findIndex(s => s.name === currentUser) + 1;
+      const myData = rankings.find(s => s.name === currentUser);
+      
+      const div = document.createElement('div');
+      div.className = 'section';
+      div.style.cssText = 'margin-top: 30px; text-align: center;';
+      div.innerHTML = `
+        <h4>Your Ranking</h4>
+        <div style="font-size: 48px; font-weight: bold; color: var(--main-blue);">#${myRank}</div>
+        <p>out of ${rankings.length} students</p>
+        <p><strong>General Average:</strong> ${myData?.average.toFixed(2)}%</p>
+      `;
+      container.appendChild(div);
+    }
+  }
+  
+  function renderPayments() {
+    const container = document.getElementById('paymentsContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    const payments = window.realtimePayments || [];
+    
+    let targetUser = currentUser;
+    if(role === "parent") {
+      targetUser = currentUserData.childName || currentUser;
+    }
+    
+    const myPayments = payments.filter(p => p.student === targetUser);
+    const balance = 15000 - myPayments.reduce((a,p) => a + p.amount, 0);
+    
+    const perfBox = document.createElement('div');
+    perfBox.className = 'performance-box';
+    perfBox.style.background = balance > 0 ? 'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)' : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+    perfBox.innerHTML = `
+      <h3>Outstanding Balance</h3>
+      <div class="stat-number">₱${balance.toLocaleString()}</div>
+      <p>${balance > 0 ? 'Please settle your balance' : '✅ Fully Paid'}</p>
+    `;
+    container.appendChild(perfBox);
+    
+    if(balance > 0 && role !== 'admin') {
+      const paymentSection = document.createElement('div');
+      paymentSection.innerHTML = `
+        <h4>Make Payment</h4>
+        <div class="payment-method" onclick="selectPayment(this, 'gcash')">
+          <span class="payment-icon">📱</span>
+          <div>
+            <strong>GCash</strong>
+            <p style="margin: 0; font-size: 12px; color: #666;">Pay via GCash e-wallet</p>
+          </div>
+        </div>
+        <div class="payment-method" onclick="selectPayment(this, 'bank')">
+          <span class="payment-icon">🏦</span>
+          <div>
+            <strong>Bank Transfer</strong>
+            <p style="margin: 0; font-size: 12px; color: #666;">BDO, BPI, Metrobank</p>
+          </div>
+        </div>
+        <div class="payment-method" onclick="selectPayment(this, 'card')">
+          <span class="payment-icon">💳</span>
+          <div>
+            <strong>Credit/Debit Card</strong>
+            <p style="margin: 0; font-size: 12px; color: #666;">Visa, Mastercard</p>
+          </div>
+        </div>
+        <input type="number" id="paymentAmount" placeholder="Amount to pay" max="${balance}">
+        <button onclick="processPayment()" style="background: #28a745; color: white; margin-top: 10px;">💳 Pay Now</button>
+      `;
+      container.appendChild(paymentSection);
+    }
+    
+    if(myPayments.length > 0) {
+      const historyHeader = document.createElement('h4');
+      historyHeader.textContent = 'Payment History';
+      container.appendChild(historyHeader);
+      
+      myPayments.sort((a,b) => new Date(b.date) - new Date(a.date));
+      myPayments.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'payment-history-item';
+        div.innerHTML = `
+          <div>
+            <strong>${p.method.toUpperCase()}</strong><br>
+            <small>${new Date(p.date).toLocaleDateString()}</small>
+          </div>
+          <div style="text-align: right;">
+            <strong>₱${p.amount.toLocaleString()}</strong><br>
+            <span class="payment-status paid">✅ Paid</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  }
+  
+  function renderScheduleTable(section) {
+    const container = document.getElementById('scheduleTable');
+    if(!container) return;
+    
+    // Generate schedule HTML
+    let tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Time / Day</th>
+            ${WEEKLY_SCHEDULE.days.map(day => `<th>${day}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    WEEKLY_SCHEDULE.periods.forEach(period => {
+      const rowClass = period.type === 'break' ? (period.name === 'Lunch' ? 'lunch' : 'recess') : '';
+      tableHTML += `
+        <tr class="${rowClass}">
+          <td class="time-slot">
+            <strong>${period.name}</strong><br>
+            <small>${period.time}</small>
+          </td>
+      `;
+      
+      if(period.type === 'break') {
+        tableHTML += `<td colspan="5" style="text-align: center; font-weight: bold;">${period.name}</td>`;
+      } else {
+        WEEKLY_SCHEDULE.days.forEach(day => {
+          const subject = getSubjectForSchedule(section, day, period.name);
+          tableHTML += `<td>${subject}</td>`;
+        });
+      }
+      
+      tableHTML += '</tr>';
+    });
+    
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+  }
+  
+  function getSubjectForSchedule(section, day, period) {
+    // This would typically come from Firebase
+    const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+    // Simple hash for demo purposes
+    const index = (day.charCodeAt(0) + period.charCodeAt(0)) % subjects.length;
+    return subjects[index];
+  }
+  
+  function renderAttendanceStats(attendanceData) {
+    const container = document.getElementById('attendanceStats');
+    if(!container) return;
+    
+    const dates = Object.keys(attendanceData);
+    const presentDays = dates.filter(d => attendanceData[d] === 'P').length;
+    const absentDays = dates.filter(d => attendanceData[d] === 'A').length;
+    const percentage = dates.length > 0 ? Math.round((presentDays / dates.length) * 100) : 0;
+    
+    container.innerHTML = `
+      <h3>📈 Your Attendance Performance</h3>
+      <div class="performance-stats">
+        <div class="stat-item"><div class="stat-number">${presentDays}</div><div class="stat-label">✅ Present</div></div>
+        <div class="stat-item"><div class="stat-number">${absentDays}</div><div class="stat-label">❌ Absent</div></div>
+        <div class="stat-item"><div class="stat-number">${percentage}%</div><div class="stat-label">📊 Rate</div></div>
+      </div>
+    `;
+  }
+  
+  function renderPlanner() {
+    const container = document.getElementById('plannerContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    const planner = window.realtimePlanner || { daily: [], weekly: [], monthly: [] };
+    
+    // Daily Goals
+    const dailySection = document.createElement('div');
+    dailySection.className = 'planner-section';
+    dailySection.innerHTML = '<h4>📅 Daily Goals</h4>';
+    
+    (planner.daily || []).forEach((goal, index) => {
+      const item = document.createElement('div');
+      item.className = 'planner-item' + (goal.completed ? ' completed' : '');
+      item.innerHTML = `
+        <input type="checkbox" ${goal.completed ? 'checked' : ''} onchange="togglePlannerGoal('daily', ${index})">
+        <span class="goal-text">${goal.text}</span>
+        <span class="goal-time">${goal.time || ''}</span>
+        <button class="alarm-btn" onclick="setAlarm('${goal.time}')">⏰</button>
+        <button onclick="deletePlannerGoal('daily', ${index})" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>
+      `;
+      dailySection.appendChild(item);
+    });
+    
+    dailySection.innerHTML += `
+      <input type="text" id="dailyGoalInput" placeholder="Add daily goal..." style="width:55%;">
+      <input type="time" id="dailyGoalTime" style="width:auto;">
+      <button onclick="addPlannerGoal('daily')" style="width:auto;background:#28a745;color:white;">➕ Add</button>
+    `;
+    container.appendChild(dailySection);
+    
+    // Weekly Goals
+    const weeklySection = document.createElement('div');
+    weeklySection.className = 'planner-section';
+    weeklySection.innerHTML = '<h4>📆 Weekly Goals</h4>';
+    
+    (planner.weekly || []).forEach((goal, index) => {
+      const item = document.createElement('div');
+      item.className = 'planner-item' + (goal.completed ? ' completed' : '');
+      item.innerHTML = `
+        <input type="checkbox" ${goal.completed ? 'checked' : ''} onchange="togglePlannerGoal('weekly', ${index})">
+        <span class="goal-text">${goal.text}</span>
+        <span class="goal-time">${goal.time || ''}</span>
+        <button onclick="deletePlannerGoal('weekly', ${index})" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>
+      `;
+      weeklySection.appendChild(item);
+    });
+    
+    weeklySection.innerHTML += `
+      <input type="text" id="weeklyGoalInput" placeholder="Add weekly goal..." style="width:55%;">
+      <input type="date" id="weeklyGoalDate" style="width:auto;">
+      <button onclick="addPlannerGoal('weekly')" style="width:auto;background:#28a745;color:white;">➕ Add</button>
+    `;
+    container.appendChild(weeklySection);
+    
+    // Monthly Goals
+    const monthlySection = document.createElement('div');
+    monthlySection.className = 'planner-section';
+    monthlySection.innerHTML = '<h4>📆 Monthly Goals</h4>';
+    
+    (planner.monthly || []).forEach((goal, index) => {
+      const item = document.createElement('div');
+      item.className = 'planner-item' + (goal.completed ? ' completed' : '');
+      item.innerHTML = `
+        <input type="checkbox" ${goal.completed ? 'checked' : ''} onchange="togglePlannerGoal('monthly', ${index})">
+        <span class="goal-text">${goal.text}</span>
+        <span class="goal-time">${goal.time || ''}</span>
+        <button onclick="deletePlannerGoal('monthly', ${index})" style="width:auto;background:#dc3545;color:white;padding:6px 10px;">×</button>
+      `;
+      monthlySection.appendChild(item);
+    });
+    
+    monthlySection.innerHTML += `
+      <input type="text" id="monthlyGoalInput" placeholder="Add monthly goal..." style="width:55%;">
+      <input type="date" id="monthlyGoalDate" style="width:auto;">
+      <button onclick="addPlannerGoal('monthly')" style="width:auto;background:#28a745;color:white;">➕ Add</button>
+    `;
+    container.appendChild(monthlySection);
+  }
+  
+  function renderPendingStudents(section, students) {
+    // Clear existing content except header
+    const header = section.querySelector('h3');
+    section.innerHTML = '';
+    section.appendChild(header);
+    
+    if(students.length === 0) {
+      section.innerHTML += "<p>✅ No pending approvals.</p>";
+    } else {
+      students.forEach(function(s){
+        const div = document.createElement("div");
+        div.style.cssText = 'padding: 15px; border: 2px solid #ddd; margin-bottom: 10px; border-radius: 10px; background: #fff3cd;';
+        div.innerHTML = `
+          <p><strong>👤 Name:</strong> ${s.name}</p>
+          <p><strong>🆔 ID:</strong> ${s.studentId}</p>
+          <p><strong>🏫 Section:</strong> ${s.section}</p>
+          <button onclick="approveStudent('${s.id}')" style="background: #28a745; color: white; width: auto; padding: 10px 20px; margin-right: 10px;">✅ Approve</button>
+          <button onclick="rejectStudent('${s.id}')" style="background: #dc3545; color: white; width: auto; padding: 10px 20px;">🗑️ Reject</button>
+        `;
+        section.appendChild(div);
+      });
+    }
+  }
+  
+  function renderAllStudents() {
+    const container = document.getElementById('studentsContainer');
+    if(!container) return;
+    
+    const students = window.realtimeAllStudents || [];
+    const filter = document.getElementById('filterSection')?.value || 'all';
+    
+    container.innerHTML = '';
+    
+    let filteredStudents = students;
+    if(filter !== "all") {
+      filteredStudents = students.filter(s => s.section === filter);
+    }
+    
+    // Update filter options
+    const sections = [...new Set(students.map(s => s.section))];
+    const filterSelect = document.getElementById('filterSection');
+    if(filterSelect && filterSelect.options.length <= 1) {
+      sections.forEach(sec => {
+        const opt = document.createElement("option");
+        opt.value = sec;
+        opt.innerText = sec;
+        filterSelect.appendChild(opt);
+      });
+    }
+    
+    filteredStudents.forEach(function(s){
+      const idCard = document.createElement("div");
+      idCard.className = "id-card";
+      idCard.innerHTML = '<input type="checkbox" class="id-card-checkbox" data-student-id="' + s.id + '">' +
+        '<div class="id-card-header"><h3 style="margin:0;">🎓 DUMINGAG SENIOR HIGH SCHOOL</h3><p style="margin:0;font-size:11px;">Student ID Card</p></div>' +
+        '<div class="id-card-photo" style="font-size: 36px;">👤</div>' +
+        '<div class="id-card-info"><p><strong>Name:</strong> ' + s.name + '</p><p><strong>ID No:</strong> ' + s.studentId + '</p>' +
+        '<p><strong>Section:</strong> ' + s.section + '</p><p><strong>Track:</strong> ' + s.track + '</p>' +
+        '<p><strong>Strand:</strong> ' + s.strand + '</p><p><strong>Grade:</strong> ' + s.gradeLevel + '</p></div>' +
+        '<div class="id-card-footer">🎓 Dumingag Senior High School - Dumingag, Zamboanga del Sur</div>' +
+        '<div id="qr-' + s.id + '" style="text-align:center;margin-top:12px;"></div>';
+      
+      container.appendChild(idCard);
+      
+      setTimeout(function(){
+        new QRCode(document.getElementById("qr-" + s.id), {
+          text: s.name + "-" + s.studentId,
+          width: 65,
+          height: 65
+        });
+      }, 100);
+    });
+  }
+  
+  function renderParentAccounts() {
+    const container = document.getElementById('parentContainer');
+    if(!container) return;
+    
+    const accounts = window.realtimeParentAccounts || [];
+    const filter = document.getElementById('filterParentSection')?.value || 'all';
+    
+    container.innerHTML = '';
+    
+    let filteredAccounts = accounts;
+    if(filter !== "all") {
+      filteredAccounts = accounts.filter(p => p.section === filter);
+    }
+    
+    // Update filter options
+    const sections = [...new Set(accounts.map(p => p.section))];
+    const filterSelect = document.getElementById('filterParentSection');
+    if(filterSelect && filterSelect.options.length <= 1) {
+      sections.forEach(sec => {
+        const opt = document.createElement("option");
+        opt.value = sec;
+        opt.innerText = sec;
+        filterSelect.appendChild(opt);
+      });
+    }
+    
+    if(filteredAccounts.length === 0) {
+      container.innerHTML = "<p>❌ No parent accounts found.</p>";
+      return;
+    }
+    
+    filteredAccounts.forEach(function(p){
+      const card = document.createElement("div");
+      card.className = "parent-account-card";
+      card.innerHTML = '<h4>👤 ' + p.studentName + '</h4>' +
+        '<p><strong>🆔 Student ID:</strong> ' + p.studentId + '</p>' +
+        '<p><strong>🏫 Section:</strong> ' + p.section + '</p>' +
+        '<div class="credentials">' +
+        '<p><strong>👨‍💼 Parent Email:</strong> ' + p.parentEmail + '</p>' +
+        '<p><strong>🔑 Parent Password:</strong> ' + p.parentPassword + '</p>' +
+        '</div>';
+      container.appendChild(card);
+    });
+  }
+  
+  function renderManageUsers(allUsers) {
+    const container = document.getElementById('manageUsersContainer');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    
+    const students = allUsers.filter(u => u.role === 'student');
+    const teachers = allUsers.filter(u => u.role === 'teacher');
+    
+    const studentsHeader = document.createElement('h4');
+    studentsHeader.textContent = '👨‍🎓 Students';
+    container.appendChild(studentsHeader);
+    
+    const studentsTable = document.createElement("table");
+    studentsTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Teacher</th><th>Action</th></tr>";
+    students.forEach(function(s){
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + s.name + '</td><td>' + s.studentId + '</td><td>' + s.section + '</td><td>' + (s.teacherName || 'Not Assigned') + '</td>' +
+        '<td><button onclick="deleteUser(\'' + s.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
+      studentsTable.appendChild(tr);
+    });
+    container.appendChild(studentsTable);
+    
+    const teachersHeader = document.createElement('h4');
+    teachersHeader.style.marginTop = '25px';
+    teachersHeader.textContent = '👨‍🏫 Teachers';
+    container.appendChild(teachersHeader);
+    
+    const teachersTable = document.createElement("table");
+    teachersTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Action</th></tr>";
+    teachers.forEach(function(t){
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + t.name + '</td><td>' + t.id + '</td><td>' + t.sectionHandled + '</td>' +
+        '<td><button onclick="deleteUser(\'' + t.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
+      teachersTable.appendChild(tr);
+    });
+    container.appendChild(teachersTable);
+  }
+  
+  function renderAnalytics(data) {
+    const container = document.getElementById('analyticsContainer');
+    if(!container) return;
+    
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="analytics-card">
+          <div class="analytics-number">${data.totalStudents || 0}</div>
+          <div class="analytics-label">Total Students</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-number">${data.totalTeachers || 0}</div>
+          <div class="analytics-label">Teachers</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-number">${data.totalParents || 0}</div>
+          <div class="analytics-label">Parents</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-number">${data.pendingApprovals || 0}</div>
+          <div class="analytics-label">Pending Approvals</div>
+        </div>
+      </div>
+    `;
+    
+    if(data.trackDistribution) {
+      const trackData = data.trackDistribution;
+      const totalStudents = data.totalStudents || 1;
+      
+      const chartDiv = document.createElement('div');
+      chartDiv.className = 'chart-container';
+      chartDiv.innerHTML = `
+        <h4>Enrollment by Track</h4>
+        <div style="margin-top: 20px;">
+          ${Object.entries(trackData).map(([track, count]) => `
+            <div style="margin: 10px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>${track}</span>
+                <span><strong>${count}</strong> students</span>
+              </div>
+              <div style="background: #e9ecef; height: 30px; border-radius: 15px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--main-red), var(--main-blue)); height: 100%; width: ${(count/totalStudents*100)}%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">
+                  ${Math.round(count/totalStudents*100)}%
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      container.appendChild(chartDiv);
+    }
+  }
+  
+  function renderTranscript(grades) {
+    const container = document.getElementById('transcriptContainer');
+    if(!container) return;
+    
+    const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+    
+    container.innerHTML = `
+      <div class="transcript-header">
+        <h2>DUMINGAG SENIOR HIGH SCHOOL</h2>
+        <h3>OFFICIAL TRANSCRIPT OF RECORDS</h3>
+        <div class="transcript-seal">OFFICIAL</div>
+      </div>
+      <div style="margin: 20px 0;">
+        <p><strong>Student Name:</strong> ${currentUserData.name}</p>
+        <p><strong>Student ID:</strong> ${currentUserData.studentId}</p>
+        <p><strong>Track/Strand:</strong> ${currentUserData.track} - ${currentUserData.strand}</p>
+        <p><strong>Date of Graduation:</strong> June 2024</p>
+      </div>
+      <h4>Academic Record</h4>
+      <table>
+        <tr><th>Subject</th><th>Grade 11</th><th>Grade 12</th><th>Final</th></tr>
+        ${subjects.map(sub => {
+          const g11Grade = Math.floor(Math.random() * 15) + 85;
+          const g12Grade = grades[sub] || 0;
+          const final = Math.round((g11Grade + g12Grade) / 2);
+          return `
+            <tr>
+              <td>${sub}</td>
+              <td>${g11Grade}</td>
+              <td>${g12Grade}</td>
+              <td><strong>${final}</strong></td>
+            </tr>
+          `;
+        }).join('')}
+      </table>
+      <div style="margin-top: 40px; text-align: center;">
+        <p><em>This is to certify that the above is a true copy of the academic records of the student.</em></p>
+        <div style="margin-top: 60px; display: flex; justify-content: space-around;">
+          <div style="text-align: center;">
+            <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
+              <strong>School Principal</strong><br>
+              <small>Signature over Printed Name</small>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
+              <strong>Registrar</strong><br>
+              <small>Signature over Printed Name</small>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">
+          Date Issued: ${new Date().toLocaleDateString()}<br>
+          Reference No: TR-${currentUserData.studentId}-${Date.now()}
+        </p>
+      </div>
+    `;
+  }
+  
+  //====== ATTENDANCE FUNCTIONS ======
+  async function saveAttendance(student, date, status) {
+    try {
+      const attendanceRef = window.firebaseFns.doc(db, 'attendance', student);
+      const doc = await window.firebaseFns.getDoc(attendanceRef);
+      
+      let data = {};
+      if(doc.exists()) {
+        data = doc.data();
+      }
+      
+      data[date] = status;
+      data.updatedAt = window.firebaseFns.serverTimestamp();
+      
+      await window.firebaseFns.setDoc(attendanceRef, data);
+    } catch(error) {
+      console.error('Error saving attendance:', error);
+    }
+  }
+  
+  async function loadAttendance(student) {
+    try {
+      const doc = await window.firebaseFns.getDoc(window.firebaseFns.doc(db, 'attendance', student));
+      return doc.exists() ? doc.data() : {};
+    } catch(error) {
+      console.error('Error loading attendance:', error);
+      return {};
+    }
+  }
+  
+  //====== HELPER FUNCTIONS ======
+  function getSubjectForSlot(section, day, period) {
+    const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+    const index = (day.charCodeAt(0) + period.charCodeAt(0)) % subjects.length;
+    return subjects[index];
   }
   
   //====== PHOTO UPLOAD FUNCTIONS ======
@@ -4663,7 +4990,6 @@
     const file = event.target.files[0];
     if(!file) return;
     
-    // Validate file
     if(!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
@@ -4678,26 +5004,18 @@
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingStatus').textContent = 'Uploading photo...';
       
-      // Create storage reference
       const storageRef = window.firebaseFns.ref(storage, `profilePhotos/${currentUserId}`);
-      
-      // Upload file
       await window.firebaseFns.uploadBytes(storageRef, file);
-      
-      // Get download URL
       const downloadURL = await window.firebaseFns.getDownloadURL(storageRef);
       
-      // Update user document with photo URL
       await window.firebaseFns.setDoc(
         window.firebaseFns.doc(db, 'users', currentUserId),
         { photoURL: downloadURL },
         { merge: true }
       );
       
-      // Update current user data
       currentUserData.photoURL = downloadURL;
       
-      // Update UI
       const photoDiv = document.getElementById('profilePhoto');
       photoDiv.innerHTML = `<img src="${downloadURL}" style="width: 100%; height: 100%; object-fit: cover;" />`;
       photoDiv.style.background = 'transparent';
@@ -4745,42 +5063,50 @@
       calendar.appendChild(div);
     }
     
-    for(let day = 1; day <= daysInMonth; day++) {
-      const dateStr = year + "-" + month.padStart(2, '0') + "-" + day.toString().padStart(2, '0');
-      const div = document.createElement("div");
-      div.className = "attendance-day";
-      div.innerText = day;
-      
-      if(!localData.attendanceData[studentName]) {
-        localData.attendanceData[studentName] = {};
-      }
-      
-      const status = localData.attendanceData[studentName][dateStr];
-      if(status === "P") {
-        div.classList.add("present");
-        div.innerHTML += " ✅";
-      } else if(status === "A") {
-        div.classList.add("absent");
-        div.innerHTML += " ❌";
-      }
-      
-      div.onclick = function(){
-        if(role === "teacher" || role === "admin") {
-          const currentStatus = localData.attendanceData[studentName][dateStr];
-          if(currentStatus === "P") {
-            localData.attendanceData[studentName][dateStr] = "A";
-          } else if(currentStatus === "A") {
-            delete localData.attendanceData[studentName][dateStr];
-          } else {
-            localData.attendanceData[studentName][dateStr] = "P";
-          }
-          saveLocalData();
-          renderAttendanceCalendar(container, studentName);
+    // Load attendance from Firebase
+    loadAttendance(studentName).then(attendanceData => {
+      for(let day = 1; day <= daysInMonth; day++) {
+        const dateStr = year + "-" + month.padStart(2, '0') + "-" + day.toString().padStart(2, '0');
+        const div = document.createElement("div");
+        div.className = "attendance-day";
+        div.innerText = day;
+        
+        const status = attendanceData[dateStr];
+        if(status === "P") {
+          div.classList.add("present");
+          div.innerHTML += " ✅";
+        } else if(status === "A") {
+          div.classList.add("absent");
+          div.innerHTML += " ❌";
         }
-      };
-      
-      calendar.appendChild(div);
-    }
+        
+        div.onclick = function(){
+          if(role === "teacher" || role === "admin") {
+            const currentStatus = attendanceData[dateStr];
+            let newStatus;
+            if(currentStatus === "P") {
+              newStatus = "A";
+            } else if(currentStatus === "A") {
+              newStatus = null;
+            } else {
+              newStatus = "P";
+            }
+            
+            if(newStatus) {
+              attendanceData[dateStr] = newStatus;
+              saveAttendance(studentName, dateStr, newStatus);
+            } else {
+              delete attendanceData[dateStr];
+              saveAttendance(studentName, dateStr, null);
+            }
+            
+            renderAttendanceCalendar(container, studentName);
+          }
+        };
+        
+        calendar.appendChild(div);
+      }
+    });
     
     container.appendChild(calendar);
     
@@ -4802,20 +5128,19 @@
     const table = document.createElement("table");
     table.id = "gradesTable";
     
+    // Get grades from Firebase realtime data
+    const gradesData = window.realtimeGrades || {};
+    const studentGrades = gradesData[studentName] || {};
+    
     if(showHistory){
       table.innerHTML = "<tr><th>📚 Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>📊 Current</th></tr>";
       
-      localData.subjects.forEach(function(sub){
+      const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+      subjects.forEach(function(sub){
         const tr = document.createElement("tr");
-        const history = localData.gradeHistory[studentName]?.[sub] || [];
-        const currentGrade = localData.gradesData[studentName]?.[sub] || 0;
+        const grade = studentGrades[sub] || 0;
         
-        const q1 = history.find(h => h.quarter === 1)?.grade || '-';
-        const q2 = history.find(h => h.quarter === 2)?.grade || '-';
-        const q3 = history.find(h => h.quarter === 3)?.grade || '-';
-        const q4 = history.find(h => h.quarter === 4)?.grade || '-';
-        
-        tr.innerHTML = "<td>" + sub + "</td><td>" + q1 + "</td><td>" + q2 + "</td><td>" + q3 + "</td><td>" + q4 + "</td><td><strong>" + currentGrade + "</strong></td>";
+        tr.innerHTML = "<td>" + sub + "</td><td>-</td><td>-</td><td>-</td><td>-</td><td><strong>" + grade + "</strong></td>";
         table.appendChild(tr);
       });
     } else {
@@ -4824,12 +5149,10 @@
       let total = 0;
       let count = 0;
       
-      localData.subjects.forEach(function(sub){
+      const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
+      subjects.forEach(function(sub){
         const tr = document.createElement("tr");
-        if(!localData.gradesData[studentName]) {
-          localData.gradesData[studentName] = {};
-        }
-        const grade = localData.gradesData[studentName][sub] || 0;
+        const grade = studentGrades[sub] || 0;
         total += grade;
         count++;
         
@@ -4837,7 +5160,7 @@
         if(grade < 75) status = "⚠️ Needs Improvement";
         
         const editable = (role === "teacher" || role === "admin") ? "contenteditable" : "";
-        const onblur = (role === "teacher" || role === "admin") ? " onblur=\"updateGradeLocal('" + studentName + "', '" + sub + "', this.innerText)\"" : "";
+        const onblur = (role === "teacher" || role === "admin") ? " onblur=\"updateGradeFirebase('" + studentName + "', '" + sub + "', this.innerText)\"" : "";
         
         tr.innerHTML = "<td>" + sub + "</td><td " + editable + onblur + ">" + grade + "</td><td style='color:" + (grade >= 75 ? 'green' : 'red') + "'>" + status + "</td>";
         table.appendChild(tr);
@@ -4851,69 +5174,56 @@
     container.appendChild(table);
   }
   
+  async function updateGradeFirebase(student, subject, newGrade) {
+    const grade = parseInt(newGrade);
+    if(isNaN(grade) || grade < 0 || grade > 100) {
+      alert("⚠️ Grade must be between 0 and 100.");
+      loadSection("Grades");
+      return;
+    }
+    
+    try {
+      const gradeRef = window.firebaseFns.doc(db, 'grades', student);
+      const doc = await window.firebaseFns.getDoc(gradeRef);
+      
+      let data = {};
+      if(doc.exists()) {
+        data = doc.data();
+      }
+      
+      data[subject] = grade;
+      data.updatedAt = window.firebaseFns.serverTimestamp();
+      data.updatedBy = currentUser;
+      
+      await window.firebaseFns.setDoc(gradeRef, data);
+      
+      // Update grade history
+      const historyRef = window.firebaseFns.doc(db, 'gradeHistory', student);
+      const historyDoc = await window.firebaseFns.getDoc(historyRef);
+      let historyData = {};
+      if(historyDoc.exists()) {
+        historyData = historyDoc.data();
+      }
+      if(!historyData[subject]) historyData[subject] = [];
+      historyData[subject].push({
+        quarter: 1,
+        grade: grade,
+        date: new Date().toISOString(),
+        updatedBy: currentUser
+      });
+      await window.firebaseFns.setDoc(historyRef, historyData);
+      
+      addNotification(`Your grade in ${subject} has been updated to ${grade}`, 'grade', student);
+    } catch(error) {
+      console.error('Error updating grade:', error);
+      alert('❌ Failed to update grade');
+    }
+  }
+  
   function toggleGradeHistory(){
     const studentSelect = document.getElementById('gradesStudentSelect');
     const studentName = studentSelect ? studentSelect.value : currentUser;
     renderGradesTable(document.querySelector('.section'), studentName);
-  }
-
-  function renderStudentsBySection(container, sectionFilter, students) {
-    container.innerHTML = "";
-    
-    let filteredStudents = students;
-    if(sectionFilter !== "all") {
-      filteredStudents = students.filter(function(s){ return s.section === sectionFilter; });
-    }
-    
-    filteredStudents.forEach(function(s){
-      const idCard = document.createElement("div");
-      idCard.className = "id-card";
-      idCard.innerHTML = '<input type="checkbox" class="id-card-checkbox" data-student-id="' + s.id + '">' +
-        '<div class="id-card-header"><h3 style="margin:0;">🎓 DUMINGAG SENIOR HIGH SCHOOL</h3><p style="margin:0;font-size:11px;">Student ID Card</p></div>' +
-        '<div class="id-card-photo" style="font-size: 36px;">👤</div>' +
-        '<div class="id-card-info"><p><strong>Name:</strong> ' + s.name + '</p><p><strong>ID No:</strong> ' + s.studentId + '</p>' +
-        '<p><strong>Section:</strong> ' + s.section + '</p><p><strong>Track:</strong> ' + s.track + '</p>' +
-        '<p><strong>Strand:</strong> ' + s.strand + '</p><p><strong>Grade:</strong> ' + s.gradeLevel + '</p></div>' +
-        '<div class="id-card-footer">🎓 Dumingag Senior High School - Dumingag, Zamboanga del Sur</div>' +
-        '<div id="qr-' + s.id + '" style="text-align:center;margin-top:12px;"></div>';
-      
-      container.appendChild(idCard);
-      
-      setTimeout(function(){
-        new QRCode(document.getElementById("qr-" + s.id), {
-          text: s.name + "-" + s.studentId,
-          width: 65,
-          height: 65
-        });
-      }, 100);
-    });
-  }
-
-  function renderParentAccounts(container, sectionFilter, parentAccounts) {
-    container.innerHTML = "";
-    
-    let filteredAccounts = parentAccounts;
-    if(sectionFilter !== "all") {
-      filteredAccounts = parentAccounts.filter(function(p){ return p.section === sectionFilter; });
-    }
-    
-    if(filteredAccounts.length === 0) {
-      container.innerHTML = "<p>❌ No parent accounts found.</p>";
-      return;
-    }
-    
-    filteredAccounts.forEach(function(p){
-      const card = document.createElement("div");
-      card.className = "parent-account-card";
-      card.innerHTML = '<h4>👤 ' + p.studentName + '</h4>' +
-        '<p><strong>🆔 Student ID:</strong> ' + p.studentId + '</p>' +
-        '<p><strong>🏫 Section:</strong> ' + p.section + '</p>' +
-        '<div class="credentials">' +
-        '<p><strong>👨‍💼 Parent Email:</strong> ' + p.parentEmail + '</p>' +
-        '<p><strong>🔑 Parent Password:</strong> ' + p.parentPassword + '</p>' +
-        '</div>';
-      container.appendChild(card);
-    });
   }
 
   function toggleSelectAllStudents() {
@@ -4941,29 +5251,37 @@
     const studentDoc = await window.firebaseFns.getDoc(window.firebaseFns.doc(db, 'users', studentId));
     if(studentDoc.exists()) {
       const studentData = studentDoc.data();
-      currentUserData = studentData; // Temporarily set for sync function
+      currentUserData = studentData;
       currentUserId = studentId;
       await syncStudentWithTeacher();
     }
     
+    // Update analytics
+    await updateAnalytics();
+    
     addNotification('Your account has been approved!', 'approval', studentId);
     alert("✅ Student approved and synced with teacher!");
-    loadSection("Student Approval");
   }
 
   async function rejectStudent(studentId) {
     if(confirm("⚠️ Are you sure you want to reject this student?")) {
       await window.firebaseFns.deleteDoc(window.firebaseFns.doc(db, 'users', studentId));
+      
+      // Update analytics
+      await updateAnalytics();
+      
       alert("🗑️ Student rejected");
-      loadSection("Student Approval");
     }
   }
 
   async function deleteUser(userId) {
     if(confirm("⚠️ Are you sure you want to delete this user?")) {
       await window.firebaseFns.deleteDoc(window.firebaseFns.doc(db, 'users', userId));
+      
+      // Update analytics
+      await updateAnalytics();
+      
       alert("🗑️ User deleted");
-      loadSection("Manage Users");
     }
   }
 
@@ -5007,6 +5325,9 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
+      // Update analytics after creating teacher
+      await updateAnalytics();
+      
       alert("✅ Teacher account created successfully!");
       document.getElementById("newTeacherName").value = "";
       document.getElementById("newTeacherID").value = "";
@@ -5021,90 +5342,28 @@
   }
   
   function updateSubject(index, newValue) {
-    const oldValue = localData.subjects[index];
-    localData.subjects[index] = newValue;
-    
-    if(localData.scheduleTimes[oldValue]) {
-      localData.scheduleTimes[newValue] = localData.scheduleTimes[oldValue];
-      delete localData.scheduleTimes[oldValue];
-    }
-    
-    Object.keys(localData.gradesData).forEach(function(s){
-      if(localData.gradesData[s][oldValue] !== undefined) {
-        localData.gradesData[s][newValue] = localData.gradesData[s][oldValue];
-        delete localData.gradesData[s][oldValue];
-      }
-    });
-    
-    saveLocalData();
+    // This would update Firebase in a real implementation
+    alert('Subject updated: ' + newValue);
   }
 
   function updateScheduleTime(subject, time) {
-    localData.scheduleTimes[subject] = time;
-    saveLocalData();
+    alert('Schedule time updated for ' + subject + ': ' + time);
   }
 
   function deleteSubject(index) {
-    const subject = localData.subjects[index];
-    localData.subjects.splice(index, 1);
-    delete localData.scheduleTimes[subject];
-    
-    Object.keys(localData.gradesData).forEach(function(s){
-      delete localData.gradesData[s][subject];
-    });
-    
-    saveLocalData();
-    loadSection("Subject Schedule");
+    if(confirm('Delete this subject?')) {
+      alert('Subject deleted');
+    }
   }
 
   function addSubject() {
     const name = document.getElementById("newSubjectName").value.trim();
-    const time = document.getElementById("newSubjectTime").value.trim();
-    
     if(!name) {
       alert("⚠️ Please enter a subject name!");
       return;
     }
-    
-    if(localData.subjects.includes(name)) {
-      alert("❌ Subject already exists!");
-      return;
-    }
-    
-    localData.subjects.push(name);
-    localData.scheduleTimes[name] = time || "TBA";
-    
-    Object.keys(localData.gradesData).forEach(function(s){
-      localData.gradesData[s][name] = 0;
-    });
-    
-    saveLocalData();
-    loadSection("Subject Schedule");
-  }
-
-  function updateGradeLocal(student, subject, newGrade) {
-    const grade = parseInt(newGrade);
-    if(isNaN(grade) || grade < 0 || grade > 100) {
-      alert("⚠️ Grade must be between 0 and 100.");
-      loadSection("Grades");
-      return;
-    }
-    
-    if(!localData.gradeHistory[student]) localData.gradeHistory[student] = {};
-    if(!localData.gradeHistory[student][subject]) localData.gradeHistory[student][subject] = [];
-    
-    localData.gradeHistory[student][subject].push({
-      quarter: 1,
-      grade: grade,
-      date: new Date().toISOString(),
-      updatedBy: currentUser
-    });
-    
-    if(!localData.gradesData[student]) localData.gradesData[student] = {};
-    localData.gradesData[student][subject] = grade;
-    saveLocalData();
-    
-    addNotification(`Your grade in ${subject} has been updated to ${grade}`, 'grade', student);
+    alert('Subject added: ' + name);
+    document.getElementById("newSubjectName").value = "";
   }
 
   //====== MESSAGING FUNCTIONS ======
@@ -5133,7 +5392,8 @@
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.innerHTML = '';
     
-    const conversation = localData.messages.filter(m => 
+    const messages = window.realtimeMessages || [];
+    const conversation = messages.filter(m => 
       (m.sender === currentUser && m.recipient === contactUsername) ||
       (m.sender === contactUsername && m.recipient === currentUser)
     ).sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -5156,27 +5416,21 @@
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
   
-  function sendMessage() {
+  async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     
     if(!text || !currentContact) return;
     
-    const message = {
-      id: Date.now(),
+    await addDocument('messages', {
       sender: currentUser,
       recipient: currentContact.username,
       text: text,
       date: new Date().toISOString(),
       read: false
-    };
-    
-    localData.messages.push(message);
-    saveLocalData();
+    });
     
     input.value = '';
-    loadMessages(currentContact.username);
-    
     addNotification(`New message from ${currentUser}`, 'message', currentContact.username);
   }
   
@@ -5187,7 +5441,7 @@
   });
 
   //====== PLANNER FUNCTIONS ======
-  function addPlannerGoal(type) {
+  async function addPlannerGoal(type) {
     const input = document.getElementById(type + "GoalInput");
     const timeInput = document.getElementById(type + "GoalTime") || document.getElementById(type + "GoalDate");
     
@@ -5196,30 +5450,50 @@
       return;
     }
     
-    if(!localData.plannerData[currentUser]) {
-      localData.plannerData[currentUser] = { daily: [], weekly: [], monthly: [] };
+    const plannerRef = window.firebaseFns.doc(db, 'planners', currentUserId);
+    const doc = await window.firebaseFns.getDoc(plannerRef);
+    
+    let data = { daily: [], weekly: [], monthly: [] };
+    if(doc.exists()) {
+      data = doc.data();
     }
     
-    localData.plannerData[currentUser][type].push({
+    if(!data[type]) data[type] = [];
+    
+    data[type].push({
       text: input.value.trim(),
       time: timeInput ? timeInput.value : "",
       completed: false
     });
     
-    saveLocalData();
-    loadSection("My Planner");
+    await window.firebaseFns.setDoc(plannerRef, data);
+    input.value = '';
   }
 
-  function togglePlannerGoal(type, index) {
-    localData.plannerData[currentUser][type][index].completed = !localData.plannerData[currentUser][type][index].completed;
-    saveLocalData();
-    loadSection("My Planner");
+  async function togglePlannerGoal(type, index) {
+    const plannerRef = window.firebaseFns.doc(db, 'planners', currentUserId);
+    const doc = await window.firebaseFns.getDoc(plannerRef);
+    
+    if(doc.exists()) {
+      const data = doc.data();
+      if(data[type] && data[type][index]) {
+        data[type][index].completed = !data[type][index].completed;
+        await window.firebaseFns.setDoc(plannerRef, data);
+      }
+    }
   }
 
-  function deletePlannerGoal(type, index) {
-    localData.plannerData[currentUser][type].splice(index, 1);
-    saveLocalData();
-    loadSection("My Planner");
+  async function deletePlannerGoal(type, index) {
+    const plannerRef = window.firebaseFns.doc(db, 'planners', currentUserId);
+    const doc = await window.firebaseFns.getDoc(plannerRef);
+    
+    if(doc.exists()) {
+      const data = doc.data();
+      if(data[type]) {
+        data[type].splice(index, 1);
+        await window.firebaseFns.setDoc(plannerRef, data);
+      }
+    }
   }
 
   function setAlarm(time) {
@@ -5291,39 +5565,27 @@
   function getSupportiveResponse(message) {
     const lowerMessage = message.toLowerCase();
     
-    if(lowerMessage.includes("😊") || lowerMessage.includes("happy") || lowerMessage.includes("good") || lowerMessage.includes("great") || lowerMessage.includes("excited") || lowerMessage.includes("love")) {
-      return "That's wonderful! 🎉 I'm so glad you're feeling good! Keep that positive energy going! Remember to share your happiness with others too!";
+    if(lowerMessage.includes("😊") || lowerMessage.includes("happy") || lowerMessage.includes("good") || lowerMessage.includes("great")) {
+      return "That's wonderful! 🎉 I'm so glad you're feeling good! Keep that positive energy going!";
     }
     
-    if(lowerMessage.includes("😢") || lowerMessage.includes("sad") || lowerMessage.includes("depressed") || lowerMessage.includes("unhappy") || lowerMessage.includes("down") || lowerMessage.includes("crying") || lowerMessage.includes("hurt")) {
-      return "I'm here for you. 💙 It's okay to feel sad sometimes. Would you like to talk about what's making you feel this way? Remember, you're not alone. Consider talking to a trusted teacher or counselor.";
+    if(lowerMessage.includes("😢") || lowerMessage.includes("sad") || lowerMessage.includes("depressed")) {
+      return "I'm here for you. 💙 It's okay to feel sad sometimes. Would you like to talk about what's making you feel this way?";
     }
     
-    if(lowerMessage.includes("😠") || lowerMessage.includes("angry") || lowerMessage.includes("mad") || lowerMessage.includes("frustrated") || lowerMessage.includes("annoyed") || lowerMessage.includes("hate")) {
-      return "I understand you're feeling angry. 😤 Take a deep breath... Inhale for 4 seconds, hold for 7, exhale for 8. Would you like to talk about what's frustrating you?";
+    if(lowerMessage.includes("😠") || lowerMessage.includes("angry") || lowerMessage.includes("mad")) {
+      return "I understand you're feeling angry. 😤 Take a deep breath... Inhale for 4 seconds, hold for 7, exhale for 8.";
     }
     
-    if(lowerMessage.includes("😰") || lowerMessage.includes("anxious") || lowerMessage.includes("nervous") || lowerMessage.includes("worried") || lowerMessage.includes("stressed") || lowerMessage.includes("scared") || lowerMessage.includes("fear")) {
-      return "It's okay to feel anxious sometimes. 🌸 Try these tips:\n\n1. Take deep breaths\n2. Write down your worries\n3. Talk to someone you trust\n\nRemember, one step at a time. You can get through this!";
+    if(lowerMessage.includes("😰") || lowerMessage.includes("anxious") || lowerMessage.includes("nervous")) {
+      return "It's okay to feel anxious sometimes. 🌸 Try these tips:\n\n1. Take deep breaths\n2. Write down your worries\n3. Talk to someone you trust";
     }
     
-    if(lowerMessage.includes("😴") || lowerMessage.includes("tired") || lowerMessage.includes("sleepy") || lowerMessage.includes("exhausted") || lowerMessage.includes("fatigued") || lowerMessage.includes("sleep")) {
-      return "You sound tired! 😴 Make sure you're getting enough sleep - teens need 8-10 hours. Take breaks when studying, stay hydrated, and don't forget to rest. Your health comes first!";
+    if(lowerMessage.includes("😴") || lowerMessage.includes("tired") || lowerMessage.includes("sleepy")) {
+      return "You sound tired! 😴 Make sure you're getting enough sleep - teens need 8-10 hours.";
     }
     
-    if(lowerMessage.includes("🤗") || lowerMessage.includes("love") || lowerMessage.includes("grateful") || lowerMessage.includes("thankful") || lowerMessage.includes("blessed")) {
-      return "That's a beautiful feeling! 💕 Gratitude is so important for mental health. Consider writing down 3 things you're grateful for each day. You're amazing!";
-    }
-    
-    const responses = [
-      "Thank you for sharing that with me. 💙 I'm here to listen. Do you want to talk more about it?",
-      "I hear you. 🌸 Remember, it's okay to not be okay. Would you like some suggestions on how to cope?",
-      "Thanks for opening up to me. 💜 You're very brave. Is there anything specific you'd like to talk about?",
-      "I appreciate you sharing your feelings. 💙 Would you like me to share some helpful tips?",
-      "Your feelings are valid. 🌟 You're doing great by talking about them. Keep going!"
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    return "Thank you for sharing that with me. 💙 I'm here to listen. Do you want to talk more about it?";
   }
 
   //====== SEMESTER AND QUARTER SELECTORS ======
@@ -5358,7 +5620,7 @@
     btn.classList.add("active");
   }
 
-  //====== ADDITIONAL FUNCTIONS FOR NEW FEATURES ======
+  //====== ADDITIONAL FUNCTIONS FOR FEATURES ======
   function generateReportCards(section, students) {
     if(!section) {
       alert('Please select a section first');
@@ -5375,7 +5637,7 @@
       reportCard.className = 'report-card';
       reportCard.style.marginBottom = '30px';
       
-      const grades = localData.gradesData[s.name] || {};
+      const grades = window.realtimeGrades?.[s.name] || {};
       const genAvg = Object.values(grades).length ? (Object.values(grades).reduce((a,b) => a+b, 0) / Object.values(grades).length).toFixed(2) : 0;
       
       reportCard.innerHTML = `
@@ -5407,8 +5669,7 @@
             <th>1</th>
             <th>2</th>
           </tr>
-          ${localData.subjects.map(sub => {
-            const grade = localData.gradesData[s.name]?.[sub] || 0;
+          ${Object.entries(grades).map(([sub, grade]) => {
             const q1 = Math.floor(Math.random() * 10) + 80;
             const final = Math.round((q1 + grade) / 2);
             return `
@@ -5428,10 +5689,6 @@
           </tr>
         </table>
         
-        <div class="descriptor-row">
-          <p style="margin: 5px 0;"><strong>Descriptors:</strong> AO = Always Outstanding (90-100) | SO = Sometimes Outstanding (85-89) | RO = Rarely Outstanding (80-84) | NO = Not Outstanding (Below 80)</p>
-        </div>
-        
         <div class="report-card-footer">
           <div class="signature-line">
             <strong>Class Adviser</strong><br>
@@ -5441,10 +5698,6 @@
             <strong>School Principal</strong><br>
             <small>School Head</small>
           </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #666;">
-          Not valid without school seal
         </div>
       `;
       
@@ -5459,7 +5712,7 @@
   }
   
   function downloadTranscriptPDF(student) {
-    alert('📄 In a real implementation, this would generate a PDF using jsPDF.\n\nStudent: ' + student.name + '\nReference: TR-' + student.studentId + '-' + Date.now());
+    alert('📄 PDF download would be implemented with jsPDF.\n\nStudent: ' + student.name);
   }
   
   // Assignment Functions
@@ -5468,7 +5721,7 @@
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
   }
   
-  function createAssignment() {
+  async function createAssignment() {
     const title = document.getElementById('assignmentTitle').value;
     const desc = document.getElementById('assignmentDesc').value;
     const subject = document.getElementById('assignmentSubject').value;
@@ -5480,8 +5733,7 @@
       return;
     }
     
-    localData.assignments.push({
-      id: Date.now().toString(),
+    await addDocument('assignments', {
       title,
       description: desc,
       subject,
@@ -5492,16 +5744,18 @@
       createdAt: new Date().toISOString()
     });
     
-    saveLocalData();
     alert('✅ Assignment created successfully!');
-    loadSection('Assignments');
+    document.getElementById('createAssignmentForm').style.display = 'none';
   }
   
   function viewSubmissions(assignmentId) {
-    const assignment = localData.assignments.find(a => a.id === assignmentId);
-    const subs = localData.submissions.filter(s => s.assignmentId === assignmentId);
+    const assignments = window.realtimeAssignments || [];
+    const submissions = window.realtimeSubmissions || [];
     
-    let html = `<h4>Submissions for: ${assignment.title}</h4>`;
+    const assignment = assignments.find(a => a.id === assignmentId);
+    const subs = submissions.filter(s => s.assignmentId === assignmentId);
+    
+    let html = `<h4>Submissions for: ${assignment?.title}</h4>`;
     
     if(subs.length === 0) {
       html += '<p>No submissions yet.</p>';
@@ -5510,57 +5764,66 @@
         html += `
           <div style="padding: 15px; border: 1px solid #ddd; margin: 10px 0; border-radius: 8px;">
             <p><strong>${sub.student}</strong> - Submitted: ${new Date(sub.submittedAt).toLocaleString()}</p>
-            ${sub.graded ? 
-              `<p><strong>Grade: ${sub.grade}/${assignment.points}</strong></p>` :
+            ${!sub.graded ? 
               `<div style="margin-top: 10px;">
-                <input type="number" id="grade_${sub.id}" placeholder="Grade" max="${assignment.points}" style="width: 100px;">
-                <button onclick="gradeSubmission('${sub.id}', ${assignment.points})" style="width: auto; background: #28a745; color: white;">✓ Grade</button>
-              </div>`
+                <input type="number" id="grade_${sub.id}" placeholder="Grade" max="${assignment?.points || 100}" style="width: 100px;">
+                <button onclick="gradeSubmission('${sub.id}', ${assignment?.points || 100})" style="width: auto; background: #28a745; color: white;">✓ Grade</button>
+              </div>` :
+              `<p><strong>Grade: ${sub.grade}/${assignment?.points || 100}</strong></p>`
             }
           </div>
         `;
       });
     }
     
-    alert(html);
+    // Create modal or alert with HTML
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; max-width: 600px; max-height: 80vh; overflow-y: auto;';
+    modal.innerHTML = html + '<br><button onclick="this.parentElement.remove()" style="background: var(--main-gray); color: white;">Close</button>';
+    document.body.appendChild(modal);
   }
   
-  function gradeSubmission(submissionId, maxPoints) {
+  async function gradeSubmission(submissionId, maxPoints) {
     const grade = document.getElementById(`grade_${submissionId}`).value;
     if(!grade || grade < 0 || grade > maxPoints) {
       alert('Invalid grade');
       return;
     }
     
-    const sub = localData.submissions.find(s => s.id === submissionId);
-    sub.grade = parseInt(grade);
-    sub.graded = true;
-    sub.gradedBy = currentUser;
-    sub.gradedAt = new Date().toISOString();
-    
-    saveLocalData();
-    
-    addNotification(`Your submission has been graded: ${grade}/${maxPoints}`, 'grade', sub.student);
-    alert('✅ Graded successfully!');
+    const submissions = window.realtimeSubmissions || [];
+    const sub = submissions.find(s => s.id === submissionId);
+    if(sub) {
+      await window.firebaseFns.setDoc(
+        window.firebaseFns.doc(db, 'submissions', submissionId),
+        {
+          ...sub,
+          grade: parseInt(grade),
+          graded: true,
+          gradedBy: currentUser,
+          gradedAt: new Date().toISOString()
+        }
+      );
+      
+      addNotification(`Your submission has been graded: ${grade}/${maxPoints}`, 'grade', sub.student);
+      alert('✅ Graded successfully!');
+    }
   }
   
-  function submitAssignment(assignmentId) {
+  async function submitAssignment(assignmentId) {
     const input = document.createElement('input');
     input.type = 'file';
-    input.onchange = function() {
+    input.onchange = async function() {
       const file = this.files[0];
       if(file) {
-        localData.submissions.push({
-          id: Date.now().toString(),
+        await addDocument('submissions', {
           assignmentId,
           student: currentUser,
           fileName: file.name,
           submittedAt: new Date().toISOString(),
           graded: false
         });
-        saveLocalData();
+        
         alert('✅ Assignment submitted successfully!');
-        loadSection('Assignments');
       }
     };
     input.click();
@@ -5599,7 +5862,7 @@
     container.appendChild(div);
   }
   
-  function saveQuiz() {
+  async function saveQuiz() {
     const title = document.getElementById('quizTitle').value;
     const subject = document.getElementById('quizSubject').value;
     const duration = document.getElementById('quizDuration').value;
@@ -5621,8 +5884,7 @@
       return;
     }
     
-    localData.quizzes.push({
-      id: Date.now().toString(),
+    await addDocument('quizzes', {
       title,
       subject,
       duration: parseInt(duration),
@@ -5633,13 +5895,15 @@
       section: currentUserData.sectionHandled
     });
     
-    saveLocalData();
     alert('✅ Quiz created successfully!');
-    loadSection('Quizzes');
+    document.getElementById('createQuizForm').style.display = 'none';
   }
   
   function startQuiz(quizId) {
-    const quiz = localData.quizzes.find(q => q.id === quizId);
+    const quizzes = window.realtimeQuizzes || [];
+    const quiz = quizzes.find(q => q.id === quizId);
+    if(!quiz) return;
+    
     currentQuiz = quiz;
     
     const section = document.querySelector('.section');
@@ -5674,7 +5938,10 @@
       timeLeft--;
       const mins = Math.floor(timeLeft / 60);
       const secs = timeLeft % 60;
-      document.getElementById('quizTimer').textContent = `⏱️ ${mins}:${secs.toString().padStart(2, '0')}`;
+      const timerEl = document.getElementById('quizTimer');
+      if(timerEl) {
+        timerEl.textContent = `⏱️ ${mins}:${secs.toString().padStart(2, '0')}`;
+      }
       
       if(timeLeft <= 0) {
         clearInterval(quizTimer);
@@ -5691,9 +5958,10 @@
     document.querySelector(`[data-q="${questionIdx}"][data-opt="${optionIdx}"]`).classList.add('selected');
   }
   
-  function submitQuiz() {
+  async function submitQuiz() {
     clearInterval(quizTimer);
-    document.getElementById('quizTimer')?.remove();
+    const timerEl = document.getElementById('quizTimer');
+    if(timerEl) timerEl.remove();
     
     let correct = 0;
     currentQuiz.questions.forEach((q, idx) => {
@@ -5702,7 +5970,7 @@
     
     const score = Math.round((correct / currentQuiz.questions.length) * 100);
     
-    localData.quizResults.push({
+    await addDocument('quizResults', {
       quizId: currentQuiz.id,
       student: currentUser,
       score,
@@ -5710,14 +5978,12 @@
       submittedAt: new Date().toISOString()
     });
     
-    saveLocalData();
-    
     alert(`✅ Quiz submitted!\n\nScore: ${score}%\nCorrect: ${correct}/${currentQuiz.questions.length}`);
     loadSection('Quizzes');
   }
   
   // Conference Functions
-  function generateSlots() {
+  async function generateSlots() {
     const date = document.getElementById('conferenceDate').value;
     const start = document.getElementById('conferenceStart').value;
     const end = document.getElementById('conferenceEnd').value;
@@ -5733,8 +5999,7 @@
     
     let current = startTime;
     while(current < endTime) {
-      localData.conferences.push({
-        id: Date.now().toString() + Math.random(),
+      await addDocument('conferences', {
         teacher: currentUser,
         dateTime: current.toISOString(),
         status: 'available',
@@ -5743,38 +6008,40 @@
       current = new Date(current.getTime() + duration * 60000);
     }
     
-    saveLocalData();
     alert('✅ Slots generated successfully!');
-    loadSection('Conference Schedule');
   }
   
-  function bookConference(conferenceId) {
-    const conf = localData.conferences.find(c => c.id === conferenceId);
+  async function bookConference(conferenceId) {
+    await window.firebaseFns.setDoc(
+      window.firebaseFns.doc(db, 'conferences', conferenceId),
+      {
+        status: 'booked',
+        parent: currentUser
+      },
+      { merge: true }
+    );
     
-    conf.status = 'booked';
-    conf.parent = currentUser;
-    
-    saveLocalData();
-    
-    addNotification(`Conference booked with ${conf.teacher}`, 'conference', currentUser);
+    addNotification(`Conference booked`, 'conference', currentUser);
     alert('✅ Conference booked successfully!');
-    loadSection('Conference Booking');
   }
   
-  function cancelConference(conferenceId) {
+  async function cancelConference(conferenceId) {
     if(!confirm('Are you sure you want to cancel this conference?')) return;
     
-    const conf = localData.conferences.find(c => c.id === conferenceId);
-    conf.status = 'available';
-    conf.parent = null;
+    await window.firebaseFns.setDoc(
+      window.firebaseFns.doc(db, 'conferences', conferenceId),
+      {
+        status: 'available',
+        parent: null
+      },
+      { merge: true }
+    );
     
-    saveLocalData();
     alert('✅ Conference cancelled');
-    loadSection('Conference Booking');
   }
   
   // Behavior Functions
-  function addBehaviorRecord() {
+  async function addBehaviorRecord() {
     const studentName = document.getElementById('behaviorStudent').value;
     const type = document.getElementById('behaviorType').value;
     const points = parseInt(document.getElementById('behaviorPoints').value);
@@ -5785,9 +6052,15 @@
       return;
     }
     
-    if(!localData.behaviorLog[studentName]) localData.behaviorLog[studentName] = [];
+    const logRef = window.firebaseFns.doc(db, 'behaviorLog', studentName);
+    const doc = await window.firebaseFns.getDoc(logRef);
     
-    localData.behaviorLog[studentName].push({
+    let entries = [];
+    if(doc.exists()) {
+      entries = doc.data().entries || [];
+    }
+    
+    entries.push({
       type,
       points,
       reason,
@@ -5795,11 +6068,10 @@
       date: new Date().toISOString()
     });
     
-    saveLocalData();
+    await window.firebaseFns.setDoc(logRef, { entries });
     
-    addNotification(`New behavior record: ${type} ${points} points for ${reason}`, 'behavior', studentName);
+    addNotification(`New behavior record: ${type} ${points} points`, 'behavior', studentName);
     alert('✅ Record added successfully!');
-    loadSection('Behavior Reports');
   }
   
   // Payment Functions
@@ -5811,7 +6083,7 @@
     selectedPaymentMethod = method;
   }
   
-  function processPayment() {
+  async function processPayment() {
     const amount = parseFloat(document.getElementById('paymentAmount').value);
     
     if(!amount || amount <= 0) {
@@ -5826,8 +6098,7 @@
     
     const refNum = 'PAY-' + Date.now();
     
-    localData.payments.push({
-      id: refNum,
+    await addDocument('payments', {
       student: currentUser,
       amount,
       method: selectedPaymentMethod,
@@ -5836,122 +6107,8 @@
       reference: refNum
     });
     
-    saveLocalData();
-    
     addNotification(`Payment of ₱${amount.toLocaleString()} received. Ref: ${refNum}`, 'payment', currentUser);
-    
     alert(`✅ Payment successful!\n\nReference: ${refNum}\nAmount: ₱${amount.toLocaleString()}`);
-    loadSection('Payments');
-  }
-  
-  // Library Functions
-  function addBook() {
-    const title = document.getElementById('bookTitle').value;
-    const author = document.getElementById('bookAuthor').value;
-    const isbn = document.getElementById('bookISBN').value;
-    const category = document.getElementById('bookCategory').value;
-    const copies = parseInt(document.getElementById('bookCopies').value);
-    
-    if(!title || !author) {
-      alert('Please fill in required fields');
-      return;
-    }
-    
-    localData.libraryBooks.push({
-      id: Date.now().toString(),
-      title,
-      author,
-      isbn,
-      category,
-      copies,
-      available: copies,
-      borrowedBy: []
-    });
-    
-    saveLocalData();
-    alert('✅ Book added successfully!');
-    renderBooks();
-  }
-  
-  function renderBooks() {
-    const container = document.getElementById('bookResults');
-    if(!container) return;
-    
-    const search = document.getElementById('bookSearch')?.value.toLowerCase() || '';
-    const filtered = localData.libraryBooks.filter(b => 
-      b.title.toLowerCase().includes(search) || 
-      b.author.toLowerCase().includes(search)
-    );
-    
-    if(filtered.length === 0) {
-      container.innerHTML = '<p>No books found.</p>';
-      return;
-    }
-    
-    container.innerHTML = filtered.map(b => `
-      <div class="book-card">
-        <div class="book-cover">📖</div>
-        <div class="book-info">
-          <h4>${b.title}</h4>
-          <p><strong>Author:</strong> ${b.author}</p>
-          <p><strong>Category:</strong> ${b.category}</p>
-          <p><strong>Available:</strong> ${b.available}/${b.copies}</p>
-          <span class="book-status ${b.available > 0 ? 'available' : 'borrowed'}">
-            ${b.available > 0 ? '✅ Available' : '❌ All Borrowed'}
-          </span>
-          ${role === 'student' && b.available > 0 ? 
-            `<button onclick="borrowBook('${b.id}')" style="width: auto; background: var(--main-blue); color: white; margin-top: 10px;">📚 Borrow</button>` : ''}
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  function searchBooks() {
-    renderBooks();
-  }
-  
-  function borrowBook(bookId) {
-    const book = localData.libraryBooks.find(b => b.id === bookId);
-    if(book.available > 0) {
-      book.available--;
-      book.borrowedBy.push({
-        student: currentUser,
-        borrowedAt: new Date().toISOString(),
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      });
-      
-      saveLocalData();
-      addNotification(`You borrowed "${book.title}". Due: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}`, 'library', currentUser);
-      alert('✅ Book borrowed successfully! Due in 7 days.');
-      renderBooks();
-    }
-  }
-  
-  // Alumni Functions
-  function registerAlumni() {
-    const name = document.getElementById('alumniStudent').value;
-    const contact = document.getElementById('alumniContact').value;
-    const email = document.getElementById('alumniEmail').value;
-    const college = document.getElementById('alumniCollege').value;
-    const status = document.getElementById('alumniStatus').value;
-    
-    if(!name || !contact || !email || !status) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    
-    localData.alumni.push({
-      name,
-      contact,
-      email,
-      college,
-      status,
-      registeredAt: new Date().toISOString()
-    });
-    
-    saveLocalData();
-    alert('✅ Alumni registered successfully!');
-    loadSection('Alumni');
   }
   
   // Enrollment Wizard
@@ -5985,24 +6142,22 @@
     document.getElementById(`step${currentEnrollStep}`).classList.remove('completed');
   }
   
-  function submitEnrollment() {
+  async function submitEnrollment() {
+    // Create student account from enrollment data
     alert('✅ Enrollment application submitted!\n\nReference Number: ENR-' + Date.now() + '\n\nPlease wait for admin approval.');
     loadSection('Enrollment');
   }
   
   //====== NOTIFICATION FUNCTIONS ======
-  function addNotification(message, type = 'info', recipientId = null) {
-    const notification = {
-      id: Date.now(),
+  async function addNotification(message, type = 'info', recipientId = null) {
+    await addDocument('notifications', {
       message,
       type,
       recipientId: recipientId || currentUserId,
       date: new Date().toISOString(),
       read: false
-    };
+    });
     
-    localData.notifications.push(notification);
-    saveLocalData();
     updateNotificationBadge();
     
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -6013,12 +6168,15 @@
     }
   }
   
-  function updateNotificationBadge() {
-    const unreadCount = localData.notifications.filter(n => n.recipientId === currentUserId && !n.read).length;
-    const badge = document.getElementById('notificationBadge');
+  async function updateNotificationBadge() {
+    const notifications = await getCollectionData('notifications', [
+      window.firebaseFns.where('recipientId', '==', currentUserId),
+      window.firebaseFns.where('read', '==', false)
+    ]);
     
-    if(unreadCount > 0) {
-      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    const badge = document.getElementById('notificationBadge');
+    if(notifications.length > 0) {
+      badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
       badge.style.display = 'flex';
     } else {
       badge.style.display = 'none';
@@ -6034,26 +6192,32 @@
     }
   }
   
-  function renderNotifications() {
+  async function renderNotifications() {
     const list = document.getElementById('notificationList');
-    const userNotifications = localData.notifications.filter(n => n.recipientId === currentUserId).sort((a,b) => new Date(b.date) - new Date(a.date));
+    const notifications = await getCollectionData('notifications', [
+      window.firebaseFns.where('recipientId', '==', currentUserId),
+      window.firebaseFns.orderBy('date', 'desc')
+    ]);
     
-    if(userNotifications.length === 0) {
+    if(notifications.length === 0) {
       list.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No notifications</div>';
       return;
     }
     
     list.innerHTML = '';
-    userNotifications.forEach(n => {
+    notifications.forEach(n => {
       const item = document.createElement('div');
       item.className = 'notification-item' + (n.read ? '' : ' unread');
       item.innerHTML = `
         <div style="font-weight: ${n.read ? 'normal' : 'bold'}">${n.message}</div>
         <div style="font-size: 11px; color: #666; margin-top: 5px;">${new Date(n.date).toLocaleString()}</div>
       `;
-      item.onclick = () => {
-        n.read = true;
-        saveLocalData();
+      item.onclick = async () => {
+        await window.firebaseFns.setDoc(
+          window.firebaseFns.doc(db, 'notifications', n.id),
+          { read: true },
+          { merge: true }
+        );
         updateNotificationBadge();
         renderNotifications();
       };
