@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
-<!-- Firebase SDK (v9 Modular) -->
+<!-- Firebase SDK (v9 Modular) - FIXED: Removed spaces in URLs -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -31,22 +31,29 @@
     measurementId: "G-641QGL0YPZ"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const analytics = getAnalytics(app);
-  const storage = getStorage(app);
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const analytics = getAnalytics(app);
+    const storage = getStorage(app);
 
-  window.firebaseApp = app;
-  window.firebaseAuth = auth;
-  window.firebaseDB = db;
-  window.firebaseAnalytics = analytics;
-  window.firebaseStorage = storage;
-  window.firebaseFns = {
-    onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword,
-    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch,
-    ref, uploadBytes, getDownloadURL
-  };
+    window.firebaseApp = app;
+    window.firebaseAuth = auth;
+    window.firebaseDB = db;
+    window.firebaseAnalytics = analytics;
+    window.firebaseStorage = storage;
+    window.firebaseFns = {
+      onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword,
+      collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch,
+      ref, uploadBytes, getDownloadURL
+    };
+    
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+    alert('Failed to initialize Firebase. Please check your internet connection.');
+  }
 </script>
 
 <style>
@@ -245,6 +252,7 @@
   }
   
   .toggle-btn .icon { font-size: 22px; }
+  .toggle-btn .text { font-weight: bold; }
   .toggle-btn.small { padding: 8px 12px; font-size: 14px; }
   .toggle-btn.small .text { display: none; }
   
@@ -1910,8 +1918,9 @@
   }
 </style>
 
+<!-- QRCode.js and HTML5-QRCode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -2043,6 +2052,7 @@
   const WARNING_BEFORE = 60 * 1000;
   let db, auth, storage;
   let unsubscribers = [];
+  let html5QrCodeScanner = null; // Track scanner instance
   
   // HARDCODED ADMIN CREDENTIALS
   const HARDCODED_ADMIN = {
@@ -2071,8 +2081,19 @@
   
   //====== INITIALIZATION ======
   document.addEventListener('DOMContentLoaded', async function() {
-    while(!window.firebaseApp) {
+    // Wait for Firebase to initialize with timeout
+    let attempts = 0;
+    const maxAttempts = 50;
+    
+    while(!window.firebaseApp && attempts < maxAttempts) {
       await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
+    
+    if(!window.firebaseApp) {
+      console.error('Firebase failed to initialize');
+      document.getElementById('loadingStatus').textContent = 'Failed to connect to Firebase';
+      return;
     }
     
     db = window.firebaseDB;
@@ -2081,22 +2102,26 @@
     
     document.getElementById('loadingStatus').textContent = 'Checking authentication...';
     
+    // Set up auth state listener
     window.firebaseFns.onAuthStateChanged(auth, async (user) => {
-      if(user) {
-        currentUserId = user.uid;
-        await loadUserData(user.uid);
+      try {
+        if(user) {
+          currentUserId = user.uid;
+          await loadUserData(user.uid);
+        }
+        
+        // Hide loading overlay
         document.getElementById('loadingOverlay').style.opacity = '0';
         setTimeout(() => {
           document.getElementById('loadingOverlay').style.display = 'none';
         }, 500);
-      } else {
-        document.getElementById('loadingOverlay').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loadingOverlay').style.display = 'none';
-        }, 500);
+      } catch(error) {
+        console.error('Auth state error:', error);
+        document.getElementById('loadingOverlay').style.display = 'none';
       }
     });
     
+    // Network status listeners
     window.addEventListener('online', () => {
       document.getElementById('offlineIndicator').style.display = 'none';
     });
@@ -2106,6 +2131,12 @@
     });
     
     setupPWA();
+    
+    // Add event listener for terms checkbox
+    const termsCheckbox = document.getElementById('agreeTerms');
+    if(termsCheckbox) {
+      termsCheckbox.addEventListener('change', checkPasswordStrength);
+    }
   });
   
   //====== ANALYTICS SYNC FUNCTIONS ======
@@ -2144,19 +2175,23 @@
   }
   
   async function subscribeToAnalytics(callback) {
-    const unsubscribe = window.firebaseFns.onSnapshot(
-      window.firebaseFns.doc(db, 'analytics', 'dashboard'),
-      (doc) => {
-        if(doc.exists()) {
-          callback(doc.data());
+    try {
+      const unsubscribe = window.firebaseFns.onSnapshot(
+        window.firebaseFns.doc(db, 'analytics', 'dashboard'),
+        (doc) => {
+          if(doc.exists()) {
+            callback(doc.data());
+          }
+        },
+        (error) => {
+          console.error('Analytics subscription error:', error);
         }
-      },
-      (error) => {
-        console.error('Analytics subscription error:', error);
-      }
-    );
-    unsubscribers.push(unsubscribe);
-    return unsubscribe;
+      );
+      unsubscribers.push(unsubscribe);
+      return unsubscribe;
+    } catch(error) {
+      console.error('Subscribe analytics error:', error);
+    }
   }
   
   //====== FIREBASE DATA FUNCTIONS ======
@@ -2180,6 +2215,9 @@
         loadDashboard();
         startSessionTimer();
         addNotification('Welcome back, ' + currentUser + '!', 'system');
+      } else {
+        console.error('User document not found');
+        showError('User data not found');
       }
     } catch(error) {
       console.error('Error loading user data:', error);
@@ -2297,18 +2335,22 @@
   }
   
   function subscribeToCollection(collectionName, callback, constraints = []) {
-    const q = window.firebaseFns.query(
-      window.firebaseFns.collection(db, collectionName),
-      ...constraints
-    );
-    const unsubscribe = window.firebaseFns.onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(data);
-    }, (error) => {
-      console.error('Subscription error:', error);
-    });
-    unsubscribers.push(unsubscribe);
-    return unsubscribe;
+    try {
+      const q = window.firebaseFns.query(
+        window.firebaseFns.collection(db, collectionName),
+        ...constraints
+      );
+      const unsubscribe = window.firebaseFns.onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(data);
+      }, (error) => {
+        console.error('Subscription error:', error);
+      });
+      unsubscribers.push(unsubscribe);
+      return unsubscribe;
+    } catch(error) {
+      console.error('Subscribe collection error:', error);
+    }
   }
   
   //====== AUTHENTICATION FUNCTIONS ======
@@ -2381,6 +2423,9 @@
         case 'auth/user-disabled':
           errorMsg = "Account disabled";
           break;
+        case 'auth/invalid-credential':
+          errorMsg = "Invalid email or password";
+          break;
       }
       showError(errorMsg);
     }
@@ -2411,9 +2456,11 @@
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingStatus').textContent = 'Creating account...';
       
+      // Create student account
       const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
       
+      // Save student data
       await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', uid), {
         uid,
         name,
@@ -2428,9 +2475,10 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics after creating student
+      // Update analytics
       await updateAnalytics();
       
+      // Create parent account
       const parentPassword = Math.random().toString(36).slice(-8);
       const parentEmail = `parent.${email}`;
       
@@ -2447,10 +2495,10 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics after creating parent
+      // Update analytics
       await updateAnalytics();
       
-      // Store parent account info in parentAccounts collection
+      // Store parent account info
       await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'parentAccounts', parentCredential.user.uid), {
         studentName: name,
         studentId: id,
@@ -2460,6 +2508,7 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
+      // Sign out and show success
       await window.firebaseFns.signOut(auth);
       document.getElementById('loadingOverlay').style.display = 'none';
       
@@ -2476,6 +2525,10 @@
         errorMsg = "Email already registered";
       } else if(error.code === 'auth/weak-password') {
         errorMsg = "Password is too weak";
+      } else if(error.code === 'auth/invalid-email') {
+        errorMsg = "Invalid email address";
+      } else if(error.message) {
+        errorMsg = error.message;
       }
       showError(errorMsg);
     }
@@ -2499,9 +2552,27 @@
   }
   
   async function logout() {
-    unsubscribers.forEach(unsub => unsub());
+    // Clean up all subscriptions
+    unsubscribers.forEach(unsub => {
+      try {
+        unsub();
+      } catch(e) {
+        console.error('Error unsubscribing:', e);
+      }
+    });
     unsubscribers = [];
     
+    // Stop QR scanner if running
+    if(html5QrCodeScanner) {
+      try {
+        await html5QrCodeScanner.stop();
+        html5QrCodeScanner = null;
+      } catch(e) {
+        console.error('Error stopping scanner:', e);
+      }
+    }
+    
+    // Handle hardcoded admin logout
     if(currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_")) {
       role = "";
       currentUser = "";
@@ -2519,7 +2590,13 @@
       return;
     }
     
-    await window.firebaseFns.signOut(auth);
+    // Firebase logout
+    try {
+      await window.firebaseFns.signOut(auth);
+    } catch(error) {
+      console.error('Logout error:', error);
+    }
+    
     role = "";
     currentUser = "";
     currentUserId = "";
@@ -2609,8 +2686,6 @@
     const termsAgreed = document.getElementById('agreeTerms').checked;
     signupBtn.disabled = strength < 3 || !termsAgreed;
   }
-  
-  document.getElementById('agreeTerms')?.addEventListener('change', checkPasswordStrength);
   
   //====== DASHBOARD FUNCTIONS ======
   function loadDashboard() {
@@ -2787,37 +2862,9 @@
         scannerResult.style.display = "none";
         section.appendChild(scannerResult);
         
+        // Initialize scanner with delay to ensure DOM is ready
         setTimeout(function(){
-          try {
-            const html5QrCode = new Html5Qrcode("qr-scanner");
-            html5QrCode.start(
-              { facingMode: "environment" },
-              { fps: 10, qrbox: 250 },
-              function(decodedText){
-                const parts = decodedText.split("-");
-                const scannedStudent = parts[0];
-                const today = new Date().toISOString().split("T")[0];
-                
-                // Save attendance to Firebase
-                saveAttendance(scannedStudent, today, "P");
-                
-                const resultDiv = document.getElementById("scanner-result");
-                resultDiv.style.display = "block";
-                resultDiv.className = "scanner-result success";
-                resultDiv.innerHTML = "✅ Marked " + scannedStudent + " present on " + today;
-                renderAttendanceCalendar(section, studentName);
-                
-                addNotification('You were marked present on ' + today, 'attendance', scannedStudent);
-                
-                html5QrCode.stop();
-              },
-              function(errorMessage){}
-            ).catch(function(err){
-              console.log("Scanner error:", err);
-            });
-          } catch(e) {
-            console.log("Scanner initialization error:", e);
-          }
+          initQRScanner(scannerDiv, section, studentName);
         }, 500);
       }
     }
@@ -3508,13 +3555,18 @@
       
       const qrCodeData = currentUser + "-" + new Date().toISOString().split("T")[0];
       setTimeout(() => {
-        new QRCode(qrDiv, {
-          text: qrCodeData,
-          width: 200,
-          height: 200,
-          colorDark: "#003366",
-          colorLight: "#ffffff"
-        });
+        try {
+          new QRCode(qrDiv, {
+            text: qrCodeData,
+            width: 200,
+            height: 200,
+            colorDark: "#003366",
+            colorLight: "#ffffff"
+          });
+        } catch(e) {
+          console.error('QR Code generation error:', e);
+          qrDiv.innerHTML = '<p>Error generating QR code</p>';
+        }
       }, 100);
       
       section.innerHTML += "<p style='text-align:center;margin-top:15px;'>📱 Scan this QR code for attendance</p>";
@@ -3595,7 +3647,7 @@
             div.style.cssText = 'padding: 15px; border-bottom: 1px solid #ddd; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px;';
             div.innerHTML = `
               <p>${item.content}</p>
-              <small style="color: #666;">By ${item.author || 'Unknown'} • ${item.createdAt?.toDate().toLocaleString() || 'Just now'}</small>
+              <small style="color: #666;">By ${item.author || 'Unknown'} • ${item.createdAt?.toDate ? item.createdAt.toDate().toLocaleString() : 'Just now'}</small>
             `;
             board.appendChild(div);
           });
@@ -4020,6 +4072,71 @@
         </div>
       `;
       content.appendChild(section);
+    }
+  }
+  
+  //====== QR SCANNER INITIALIZATION ======
+  async function initQRScanner(container, section, studentName) {
+    try {
+      // Check if Html5Qrcode is available
+      if(typeof Html5Qrcode === 'undefined') {
+        console.error('Html5Qrcode library not loaded');
+        container.innerHTML = '<p style="color: red;">QR Scanner library not available. Please refresh the page.</p>';
+        return;
+      }
+      
+      // Stop existing scanner if any
+      if(html5QrCodeScanner) {
+        await html5QrCodeScanner.stop();
+        html5QrCodeScanner = null;
+      }
+      
+      html5QrCodeScanner = new Html5Qrcode("qr-scanner");
+      
+      await html5QrCodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        function(decodedText){
+          handleQRScan(decodedText, section, studentName);
+        },
+        function(errorMessage){
+          // QR scan error - ignore continuous errors
+        }
+      );
+      
+      console.log('QR Scanner started successfully');
+    } catch(err) {
+      console.error("Scanner initialization error:", err);
+      container.innerHTML = '<p style="color: red;">Camera access denied or not available. Please check permissions.</p>';
+    }
+  }
+  
+  async function handleQRScan(decodedText, section, studentName) {
+    try {
+      const parts = decodedText.split("-");
+      const scannedStudent = parts[0];
+      const today = new Date().toISOString().split("T")[0];
+      
+      // Save attendance to Firebase
+      await saveAttendance(scannedStudent, today, "P");
+      
+      const resultDiv = document.getElementById("scanner-result");
+      if(resultDiv) {
+        resultDiv.style.display = "block";
+        resultDiv.className = "scanner-result success";
+        resultDiv.innerHTML = "✅ Marked " + scannedStudent + " present on " + today;
+      }
+      
+      renderAttendanceCalendar(section, studentName);
+      addNotification('You were marked present on ' + today, 'attendance', scannedStudent);
+      
+      // Stop scanner after successful scan
+      if(html5QrCodeScanner) {
+        await html5QrCodeScanner.stop();
+        html5QrCodeScanner = null;
+      }
+    } catch(error) {
+      console.error('QR Scan handling error:', error);
     }
   }
   
@@ -4739,11 +4856,15 @@
       container.appendChild(idCard);
       
       setTimeout(function(){
-        new QRCode(document.getElementById("qr-" + s.id), {
-          text: s.name + "-" + s.studentId,
-          width: 65,
-          height: 65
-        });
+        try {
+          new QRCode(document.getElementById("qr-" + s.id), {
+            text: s.name + "-" + s.studentId,
+            width: 65,
+            height: 65
+          });
+        } catch(e) {
+          console.error('QR generation error:', e);
+        }
       }, 100);
     });
   }
@@ -6150,36 +6271,44 @@
   
   //====== NOTIFICATION FUNCTIONS ======
   async function addNotification(message, type = 'info', recipientId = null) {
-    await addDocument('notifications', {
-      message,
-      type,
-      recipientId: recipientId || currentUserId,
-      date: new Date().toISOString(),
-      read: false
-    });
-    
-    updateNotificationBadge();
-    
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('DSHS School System', {
-        body: message,
-        icon: 'https://via.placeholder.com/100'
+    try {
+      await addDocument('notifications', {
+        message,
+        type,
+        recipientId: recipientId || currentUserId,
+        date: new Date().toISOString(),
+        read: false
       });
+      
+      updateNotificationBadge();
+      
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('DSHS School System', {
+          body: message,
+          icon: 'https://via.placeholder.com/100'
+        });
+      }
+    } catch(error) {
+      console.error('Error adding notification:', error);
     }
   }
   
   async function updateNotificationBadge() {
-    const notifications = await getCollectionData('notifications', [
-      window.firebaseFns.where('recipientId', '==', currentUserId),
-      window.firebaseFns.where('read', '==', false)
-    ]);
-    
-    const badge = document.getElementById('notificationBadge');
-    if(notifications.length > 0) {
-      badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
+    try {
+      const notifications = await getCollectionData('notifications', [
+        window.firebaseFns.where('recipientId', '==', currentUserId),
+        window.firebaseFns.where('read', '==', false)
+      ]);
+      
+      const badge = document.getElementById('notificationBadge');
+      if(notifications.length > 0) {
+        badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch(error) {
+      console.error('Error updating notification badge:', error);
     }
   }
   
@@ -6193,36 +6322,40 @@
   }
   
   async function renderNotifications() {
-    const list = document.getElementById('notificationList');
-    const notifications = await getCollectionData('notifications', [
-      window.firebaseFns.where('recipientId', '==', currentUserId),
-      window.firebaseFns.orderBy('date', 'desc')
-    ]);
-    
-    if(notifications.length === 0) {
-      list.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No notifications</div>';
-      return;
+    try {
+      const list = document.getElementById('notificationList');
+      const notifications = await getCollectionData('notifications', [
+        window.firebaseFns.where('recipientId', '==', currentUserId),
+        window.firebaseFns.orderBy('date', 'desc')
+      ]);
+      
+      if(notifications.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No notifications</div>';
+        return;
+      }
+      
+      list.innerHTML = '';
+      notifications.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'notification-item' + (n.read ? '' : ' unread');
+        item.innerHTML = `
+          <div style="font-weight: ${n.read ? 'normal' : 'bold'}">${n.message}</div>
+          <div style="font-size: 11px; color: #666; margin-top: 5px;">${new Date(n.date).toLocaleString()}</div>
+        `;
+        item.onclick = async () => {
+          await window.firebaseFns.setDoc(
+            window.firebaseFns.doc(db, 'notifications', n.id),
+            { read: true },
+            { merge: true }
+          );
+          updateNotificationBadge();
+          renderNotifications();
+        };
+        list.appendChild(item);
+      });
+    } catch(error) {
+      console.error('Error rendering notifications:', error);
     }
-    
-    list.innerHTML = '';
-    notifications.forEach(n => {
-      const item = document.createElement('div');
-      item.className = 'notification-item' + (n.read ? '' : ' unread');
-      item.innerHTML = `
-        <div style="font-weight: ${n.read ? 'normal' : 'bold'}">${n.message}</div>
-        <div style="font-size: 11px; color: #666; margin-top: 5px;">${new Date(n.date).toLocaleString()}</div>
-      `;
-      item.onclick = async () => {
-        await window.firebaseFns.setDoc(
-          window.firebaseFns.doc(db, 'notifications', n.id),
-          { read: true },
-          { merge: true }
-        );
-        updateNotificationBadge();
-        renderNotifications();
-      };
-      list.appendChild(item);
-    });
   }
   
   if('Notification' in window && Notification.permission === 'default') {
