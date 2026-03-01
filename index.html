@@ -19,6 +19,7 @@
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBr-wATdD81M4lc8dlxqhRUEMKVtHPj-DU",
@@ -34,14 +35,17 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const analytics = getAnalytics(app);
+  const storage = getStorage(app);
 
   window.firebaseApp = app;
   window.firebaseAuth = auth;
   window.firebaseDB = db;
   window.firebaseAnalytics = analytics;
+  window.firebaseStorage = storage;
   window.firebaseFns = {
     onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword,
-    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit
+    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit,
+    ref, uploadBytes, getDownloadURL
   };
 </script>
 
@@ -1375,33 +1379,50 @@
   tr:nth-child(even) { background-color: #f8f9fa; }
   tr:hover { background-color: #e9ecef; }
   
-  .schedule-box { 
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 15px; 
-    margin-top: 20px; 
+  /* Updated Weekly Schedule Styles */
+  .weekly-schedule {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
   }
   
-  .schedule-box div { 
-    flex: 1 1 180px; 
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
-    border: 2px solid #dee2e6; 
-    padding: 18px; 
-    border-radius: 10px; 
-    text-align: center; 
-    transition: all 0.3s;
+  .weekly-schedule table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
   }
   
-  .schedule-box div:hover {
-    border-color: var(--main-blue);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  .weekly-schedule th {
+    background: linear-gradient(135deg, var(--main-red) 0%, var(--main-blue) 100%);
+    color: white;
+    padding: 12px;
+    border: 1px solid #dee2e6;
   }
   
-  .schedule-box div strong {
-    color: var(--main-blue);
-    display: block;
-    margin-bottom: 8px;
+  .weekly-schedule td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  .weekly-schedule .time-slot {
+    font-weight: bold;
+    background: #f8f9fa;
+  }
+  
+  .weekly-schedule .recess {
+    background: #fff3cd;
+    font-style: italic;
+  }
+  
+  .weekly-schedule .lunch {
+    background: #d4edda;
+    font-weight: bold;
+  }
+  
+  .weekly-schedule tr:hover td {
+    background-color: #e9ecef;
   }
   
   .chatbox { 
@@ -1488,6 +1509,12 @@
     border: 5px solid var(--sub-yellow);
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     font-size: 48px;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+  
+  .id-card-photo:hover {
+    transform: scale(1.05);
   }
   
   .id-card-photo img { 
@@ -2013,7 +2040,8 @@
     .messaging-container { grid-template-columns: 1fr; }
     .contacts-list { max-height: 200px; }
     .attendance-legend { position: relative; bottom: auto; right: auto; margin-top: 18px; width: 100%; }
-    .schedule-box div { flex: 1 1 100%; }
+    .weekly-schedule table { font-size: 12px; }
+    .weekly-schedule th, .weekly-schedule td { padding: 8px; }
     .stat-number { font-size: 26px; }
     .login-wrapper img { width: 120px; }
   }
@@ -2162,7 +2190,7 @@
   let sessionWarningTimer = null;
   const SESSION_TIMEOUT = 30 * 60 * 1000;
   const WARNING_BEFORE = 60 * 1000;
-  let db, auth;
+  let db, auth, storage;
   let unsubscribers = [];
   
   // HARDCODED ADMIN CREDENTIALS
@@ -2172,6 +2200,22 @@
     name: "System Administrator",
     email: "admin@dshs.edu",
     role: "admin"
+  };
+  
+  // Weekly Schedule Configuration
+  const WEEKLY_SCHEDULE = {
+    periods: [
+      { name: "1st Period", time: "7:45-8:45" },
+      { name: "2nd Period", time: "8:45-9:45" },
+      { name: "Recess", time: "9:45-10:00", type: "break" },
+      { name: "3rd Period", time: "10:00-11:00" },
+      { name: "4th Period", time: "11:00-12:00" },
+      { name: "Lunch", time: "12:00-1:00", type: "break" },
+      { name: "5th Period", time: "1:00-2:00" },
+      { name: "6th Period", time: "2:00-3:00" },
+      { name: "7th Period", time: "3:00-4:00" }
+    ],
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
   };
   
   // Local data storage for features not yet in Firebase
@@ -2195,7 +2239,8 @@
     quizzes: [],
     quizResults: [],
     courseMaterials: [],
-    behaviorLog: {}
+    behaviorLog: {},
+    sectionSubjects: {} // Store subject assignments per section
   };
   
   //====== INITIALIZATION ======
@@ -2206,6 +2251,7 @@
     
     db = window.firebaseDB;
     auth = window.firebaseAuth;
+    storage = window.firebaseStorage;
     
     document.getElementById('loadingStatus').textContent = 'Checking authentication...';
     
@@ -2263,6 +2309,11 @@
         document.getElementById('signup').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         
+        // Sync student with teacher if approved
+        if(role === 'student' && currentUserData.approved && currentUserData.section) {
+          await syncStudentWithTeacher();
+        }
+        
         loadDashboard();
         startSessionTimer();
         addNotification('Welcome back, ' + currentUser + '!', 'system');
@@ -2270,6 +2321,72 @@
     } catch(error) {
       console.error('Error loading user data:', error);
       showError('Error loading user data');
+    }
+  }
+  
+  // Sync student with teacher based on section
+  async function syncStudentWithTeacher() {
+    try {
+      // Find teacher who handles this student's section
+      const teachersQuery = window.firebaseFns.query(
+        window.firebaseFns.collection(db, 'users'),
+        window.firebaseFns.where('role', '==', 'teacher'),
+        window.firebaseFns.where('sectionHandled', '==', currentUserData.section)
+      );
+      
+      const teacherSnapshot = await window.firebaseFns.getDocs(teachersQuery);
+      
+      if(!teacherSnapshot.empty) {
+        const teacher = teacherSnapshot.docs[0];
+        const teacherData = teacher.data();
+        
+        // Update student record with teacher info
+        await window.firebaseFns.setDoc(
+          window.firebaseFns.doc(db, 'users', currentUserId),
+          {
+            teacherId: teacher.id,
+            teacherName: teacherData.name,
+            teacherEmail: teacherData.email,
+            syncedAt: window.firebaseFns.serverTimestamp()
+          },
+          { merge: true }
+        );
+        
+        // Add student to teacher's student list
+        const teacherStudentsRef = window.firebaseFns.doc(db, 'teacherStudents', teacher.id);
+        const teacherStudentsDoc = await window.firebaseFns.getDoc(teacherStudentsRef);
+        
+        if(teacherStudentsDoc.exists()) {
+          const data = teacherStudentsDoc.data();
+          const students = data.students || [];
+          if(!students.find(s => s.id === currentUserId)) {
+            students.push({
+              id: currentUserId,
+              name: currentUserData.name,
+              studentId: currentUserData.studentId,
+              section: currentUserData.section,
+              gradeLevel: currentUserData.gradeLevel,
+              addedAt: new Date().toISOString()
+            });
+            await window.firebaseFns.setDoc(teacherStudentsRef, { students }, { merge: true });
+          }
+        } else {
+          await window.firebaseFns.setDoc(teacherStudentsRef, {
+            students: [{
+              id: currentUserId,
+              name: currentUserData.name,
+              studentId: currentUserData.studentId,
+              section: currentUserData.section,
+              gradeLevel: currentUserData.gradeLevel,
+              addedAt: new Date().toISOString()
+            }]
+          });
+        }
+        
+        console.log('Student synced with teacher:', teacherData.name);
+      }
+    } catch(error) {
+      console.error('Error syncing student with teacher:', error);
     }
   }
   
@@ -3920,28 +4037,97 @@
       content.appendChild(section);
     }
     
-    //------ SUBJECT SCHEDULE ------
+    //------ SUBJECT SCHEDULE - UPDATED WITH WEEKLY FORMAT ------
     else if(tab === "Subject Schedule" || tab === "Child Schedule") {
-      section.innerHTML = "<h3>📚 Subject Schedule</h3>";
+      section.innerHTML = "<h3>📚 Weekly Subject Schedule</h3>";
       
       let studentName = currentUser;
+      let userSection = currentUserData.section;
+      
       if(role === "parent") {
         studentName = currentUserData.childName || currentUser;
+        userSection = currentUserData.childSection;
+      } else if(role === "teacher") {
+        userSection = currentUserData.sectionHandled;
       }
       
-      const scheduleBox = document.createElement("div");
-      scheduleBox.className = "schedule-box";
+      // Create weekly schedule table
+      const scheduleDiv = document.createElement("div");
+      scheduleDiv.className = "weekly-schedule";
       
-      localData.subjects.forEach(function(sub){
-        const div = document.createElement("div");
-        const time = localData.scheduleTimes[sub] || "TBA";
-        div.innerHTML = "<strong>" + sub + "</strong><br>" + time;
-        scheduleBox.appendChild(div);
+      let tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Time / Day</th>
+              ${WEEKLY_SCHEDULE.days.map(day => `<th>${day}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      // Generate rows for each period
+      WEEKLY_SCHEDULE.periods.forEach(period => {
+        const rowClass = period.type === 'break' ? (period.name === 'Lunch' ? 'lunch' : 'recess') : '';
+        tableHTML += `
+          <tr class="${rowClass}">
+            <td class="time-slot">
+              <strong>${period.name}</strong><br>
+              <small>${period.time}</small>
+            </td>
+        `;
+        
+        // Add cells for each day
+        WEEKLY_SCHEDULE.days.forEach(day => {
+          if(period.type === 'break') {
+            tableHTML += `<td colspan="5" style="text-align: center; font-weight: bold;">${period.name}</td>`;
+          } else {
+            // Get subject for this slot (from localData or generate based on section)
+            const subject = getSubjectForSlot(userSection, day, period.name);
+            tableHTML += `<td>${subject}</td>`;
+          }
+        });
+        
+        tableHTML += '</tr>';
+        
+        // Break after lunch row since it spans all days
+        if(period.name === 'Lunch') {
+          // Continue to next period
+        }
       });
-      section.appendChild(scheduleBox);
       
+      tableHTML += '</tbody></table>';
+      scheduleDiv.innerHTML = tableHTML;
+      section.appendChild(scheduleDiv);
+      
+      // Add legend
+      const legend = document.createElement("div");
+      legend.style.marginTop = "20px";
+      legend.style.padding = "15px";
+      legend.style.background = "#f8f9fa";
+      legend.style.borderRadius = "8px";
+      legend.innerHTML = `
+        <h4>📋 Schedule Legend</h4>
+        <p><span style="display: inline-block; width: 20px; height: 20px; background: #fff3cd; margin-right: 10px; vertical-align: middle;"></span> Recess</p>
+        <p><span style="display: inline-block; width: 20px; height: 20px; background: #d4edda; margin-right: 10px; vertical-align: middle;"></span> Lunch</p>
+      `;
+      section.appendChild(legend);
+      
+      // Management controls for teachers/admins
       if(role === "teacher" || role === "admin") {
-        section.innerHTML += "<h4>Manage Subjects</h4>";
+        section.innerHTML += "<h4>Manage Schedule</h4>";
+        section.innerHTML += `
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 15px;">
+            <p><strong>Current Section:</strong> ${userSection}</p>
+            <p style="font-size: 13px; color: #666; margin-top: 10px;">
+              💡 Tip: The schedule is automatically generated based on your section. 
+              To customize subjects, use the Subject Management below.
+            </p>
+          </div>
+        `;
+        
+        // Subject management
+        section.innerHTML += "<h4 style='margin-top: 25px;'>Subject Management</h4>";
         localData.subjects.forEach(function(sub, index){
           const item = document.createElement("div");
           item.className = "subject-item";
@@ -4002,19 +4188,25 @@
       content.appendChild(section);
     }
 
-    //------ MY INFO ------
+    //------ MY INFO - WITH PHOTO UPLOAD ------
     else if(tab === "My Info") {
       section.innerHTML = "<h3>👤 My Information</h3>";
       
       const user = currentUserData;
       if(user) {
         const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '👤';
+        const photoURL = user.photoURL || null;
         
         section.innerHTML += `
           <div style="text-align: center; margin-bottom: 20px;">
-            <div class="id-card-photo" style="width: 120px; height: 120px; margin: 0 auto 15px; font-size: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--main-red) 0%, var(--main-blue) 100%); color: white;">
-              ${initials}
+            <div class="id-card-photo" id="profilePhoto" style="width: 120px; height: 120px; margin: 0 auto 15px; font-size: 48px; display: flex; align-items: center; justify-content: center; background: ${photoURL ? 'transparent' : 'linear-gradient(135deg, var(--main-red) 0%, var(--main-blue) 100%)'}; color: white; position: relative; overflow: hidden;">
+              ${photoURL ? `<img src="${photoURL}" style="width: 100%; height: 100%; object-fit: cover;" />` : initials}
+              <div onclick="triggerPhotoUpload()" style="position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 20px 0 0 0;">
+                📷 Change
+              </div>
             </div>
+            <input type="file" id="photoUpload" style="display: none;" accept="image/*" onchange="handlePhotoUpload(event)">
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Click "Change" to upload photo</p>
           </div>
           <div class="id-card-info" style="background: #f8f9fa; color: #333; padding: 20px; border-radius: 10px;">
             <p><strong>Name:</strong> ${user.name || '-'}</p>
@@ -4024,6 +4216,7 @@
             <p><strong>Track:</strong> ${user.track || '-'}</p>
             <p><strong>Strand:</strong> ${user.strand || '-'}</p>
             <p><strong>Grade Level:</strong> ${user.gradeLevel || '-'}</p>
+            ${user.teacherName ? `<p><strong>Adviser:</strong> ${user.teacherName}</p>` : ''}
           </div>
         `;
       }
@@ -4217,10 +4410,10 @@
         
         section.innerHTML += "<h4>👨‍🎓 Students</h4>";
         const studentsTable = document.createElement("table");
-        studentsTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Action</th></tr>";
+        studentsTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Teacher</th><th>Action</th></tr>";
         students.forEach(function(s){
           const tr = document.createElement("tr");
-          tr.innerHTML = '<td>' + s.name + '</td><td>' + s.studentId + '</td><td>' + s.section + '</td>' +
+          tr.innerHTML = '<td>' + s.name + '</td><td>' + s.studentId + '</td><td>' + s.section + '</td><td>' + (s.teacherName || 'Not Assigned') + '</td>' +
             '<td><button onclick="deleteUser(\'' + s.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
           studentsTable.appendChild(tr);
         });
@@ -4431,6 +4624,91 @@
         </div>
       `;
       content.appendChild(section);
+    }
+  }
+  
+  //====== HELPER FUNCTIONS FOR SCHEDULE ======
+  function getSubjectForSlot(section, day, period) {
+    // This is a helper function to assign subjects to schedule slots
+    // In a real implementation, this would come from a database
+    
+    if(!localData.sectionSubjects[section]) {
+      // Generate a schedule for this section if not exists
+      localData.sectionSubjects[section] = {};
+      const subjects = localData.subjects;
+      let subjectIndex = 0;
+      
+      WEEKLY_SCHEDULE.periods.forEach(p => {
+        if(p.type !== 'break') {
+          WEEKLY_SCHEDULE.days.forEach(d => {
+            const key = `${d}-${p.name}`;
+            localData.sectionSubjects[section][key] = subjects[subjectIndex % subjects.length];
+            subjectIndex++;
+          });
+        }
+      });
+      saveLocalData();
+    }
+    
+    const key = `${day}-${period}`;
+    return localData.sectionSubjects[section]?.[key] || 'TBA';
+  }
+  
+  //====== PHOTO UPLOAD FUNCTIONS ======
+  function triggerPhotoUpload() {
+    document.getElementById('photoUpload').click();
+  }
+  
+  async function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    
+    // Validate file
+    if(!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if(file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+    
+    try {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('loadingStatus').textContent = 'Uploading photo...';
+      
+      // Create storage reference
+      const storageRef = window.firebaseFns.ref(storage, `profilePhotos/${currentUserId}`);
+      
+      // Upload file
+      await window.firebaseFns.uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const downloadURL = await window.firebaseFns.getDownloadURL(storageRef);
+      
+      // Update user document with photo URL
+      await window.firebaseFns.setDoc(
+        window.firebaseFns.doc(db, 'users', currentUserId),
+        { photoURL: downloadURL },
+        { merge: true }
+      );
+      
+      // Update current user data
+      currentUserData.photoURL = downloadURL;
+      
+      // Update UI
+      const photoDiv = document.getElementById('profilePhoto');
+      photoDiv.innerHTML = `<img src="${downloadURL}" style="width: 100%; height: 100%; object-fit: cover;" />`;
+      photoDiv.style.background = 'transparent';
+      
+      document.getElementById('loadingOverlay').style.display = 'none';
+      alert('✅ Photo uploaded successfully!');
+      
+    } catch(error) {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      console.error('Error uploading photo:', error);
+      alert('❌ Failed to upload photo. Please try again.');
     }
   }
   
@@ -4658,8 +4936,18 @@
   //====== ACTION FUNCTIONS ======
   async function approveStudent(studentId) {
     await setDocument('users', studentId, { approved: true });
+    
+    // Sync student with teacher after approval
+    const studentDoc = await window.firebaseFns.getDoc(window.firebaseFns.doc(db, 'users', studentId));
+    if(studentDoc.exists()) {
+      const studentData = studentDoc.data();
+      currentUserData = studentData; // Temporarily set for sync function
+      currentUserId = studentId;
+      await syncStudentWithTeacher();
+    }
+    
     addNotification('Your account has been approved!', 'approval', studentId);
-    alert("✅ Student approved!");
+    alert("✅ Student approved and synced with teacher!");
     loadSection("Student Approval");
   }
 
