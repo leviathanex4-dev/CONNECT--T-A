@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
-<!-- Firebase SDK (v9 Modular) - FIXED: Removed spaces in URLs -->
+<!-- Firebase SDK (v9 Modular) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -1916,6 +1916,79 @@
     .section { box-shadow: none; padding: 10px; border: none; }
     .report-card { border: 2px solid #000; }
   }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    width: auto;
+    padding: 0;
+  }
+  
+  .modal-close:hover {
+    color: #000;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    z-index: 10001;
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translate(-50%, 100px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+  
+  .toast.success { background: #28a745; }
+  .toast.error { background: #dc3545; }
+  .toast.info { background: #17a2b8; }
 </style>
 
 <!-- QRCode.js and HTML5-QRCode -->
@@ -2052,7 +2125,14 @@
   const WARNING_BEFORE = 60 * 1000;
   let db, auth, storage;
   let unsubscribers = [];
-  let html5QrCodeScanner = null; // Track scanner instance
+  let html5QrCodeScanner = null;
+  let currentContact = null;
+  let currentSemester = 1;
+  let currentQuarter = 1;
+  let selectedPaymentMethod = null;
+  let currentQuiz = null;
+  let quizTimer = null;
+  let selectedAnswers = {};
   
   // HARDCODED ADMIN CREDENTIALS
   const HARDCODED_ADMIN = {
@@ -2081,7 +2161,6 @@
   
   //====== INITIALIZATION ======
   document.addEventListener('DOMContentLoaded', async function() {
-    // Wait for Firebase to initialize with timeout
     let attempts = 0;
     const maxAttempts = 50;
     
@@ -2102,7 +2181,6 @@
     
     document.getElementById('loadingStatus').textContent = 'Checking authentication...';
     
-    // Set up auth state listener
     window.firebaseFns.onAuthStateChanged(auth, async (user) => {
       try {
         if(user) {
@@ -2110,7 +2188,6 @@
           await loadUserData(user.uid);
         }
         
-        // Hide loading overlay
         document.getElementById('loadingOverlay').style.opacity = '0';
         setTimeout(() => {
           document.getElementById('loadingOverlay').style.display = 'none';
@@ -2121,7 +2198,6 @@
       }
     });
     
-    // Network status listeners
     window.addEventListener('online', () => {
       document.getElementById('offlineIndicator').style.display = 'none';
     });
@@ -2132,7 +2208,6 @@
     
     setupPWA();
     
-    // Add event listener for terms checkbox
     const termsCheckbox = document.getElementById('agreeTerms');
     if(termsCheckbox) {
       termsCheckbox.addEventListener('change', checkPasswordStrength);
@@ -2207,7 +2282,6 @@
         document.getElementById('signup').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         
-        // Sync student with teacher if approved
         if(role === 'student' && currentUserData.approved && currentUserData.section) {
           await syncStudentWithTeacher();
         }
@@ -2228,7 +2302,6 @@
   // Sync student with teacher based on section
   async function syncStudentWithTeacher() {
     try {
-      // Find teacher who handles this student's section
       const teachersQuery = window.firebaseFns.query(
         window.firebaseFns.collection(db, 'users'),
         window.firebaseFns.where('role', '==', 'teacher'),
@@ -2241,7 +2314,6 @@
         const teacher = teacherSnapshot.docs[0];
         const teacherData = teacher.data();
         
-        // Update student record with teacher info
         await window.firebaseFns.setDoc(
           window.firebaseFns.doc(db, 'users', currentUserId),
           {
@@ -2253,7 +2325,6 @@
           { merge: true }
         );
         
-        // Add student to teacher's student list
         const teacherStudentsRef = window.firebaseFns.doc(db, 'teacherStudents', teacher.id);
         const teacherStudentsDoc = await window.firebaseFns.getDoc(teacherStudentsRef);
         
@@ -2363,7 +2434,6 @@
       return;
     }
     
-    // CHECK HARDCODED ADMIN LOGIN
     if(email === HARDCODED_ADMIN.username && password === HARDCODED_ADMIN.password) {
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingStatus').textContent = 'Logging in as Admin...';
@@ -2460,7 +2530,6 @@
       const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
       
-      // Save student data
       await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', uid), {
         uid,
         name,
@@ -2475,12 +2544,11 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics
       await updateAnalytics();
       
-      // Create parent account
+      // Create parent account with auto-generated password
       const parentPassword = Math.random().toString(36).slice(-8);
-      const parentEmail = `parent.${email}`;
+      const parentEmail = `parent_${email.replace(/[@.]/g, '_')}@dshs.edu`;
       
       const parentCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
       await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', parentCredential.user.uid), {
@@ -2495,10 +2563,8 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics
       await updateAnalytics();
       
-      // Store parent account info
       await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'parentAccounts', parentCredential.user.uid), {
         studentName: name,
         studentId: id,
@@ -2508,11 +2574,12 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Sign out and show success
       await window.firebaseFns.signOut(auth);
       document.getElementById('loadingOverlay').style.display = 'none';
       
-      alert(`✅ Signup successful! Your account is pending approval.\n\nParent Account:\nEmail: ${parentEmail}\nPassword: ${parentPassword}\n\nPlease save these credentials!`);
+      // Show parent credentials notification
+      showParentCredentialsNotification(name, parentEmail, parentPassword);
+      
       clearSignup();
       showLogin();
       
@@ -2534,6 +2601,63 @@
     }
   }
   
+  function showParentCredentialsNotification(studentName, parentEmail, parentPassword) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🎉 Account Created Successfully!</h3>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+        </div>
+        <div style="background: #d4edda; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+          <p><strong>✅ Your student account is pending approval.</strong></p>
+          <p style="font-size: 14px; margin-top: 10px;">Please wait for admin approval before logging in.</p>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 20px; border-radius: 10px; border: 2px dashed var(--main-blue);">
+          <h4 style="color: var(--main-blue); margin-top: 0;">👨‍👩‍👧 Parent Account Credentials</h4>
+          <p style="font-size: 14px; margin-bottom: 15px;">Share these credentials with your parent/guardian:</p>
+          
+          <div style="background: white; padding: 15px; border-radius: 8px; font-family: monospace;">
+            <p style="margin: 5px 0;"><strong>Student:</strong> ${studentName}</p>
+            <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${parentEmail}</p>
+            <p style="margin: 5px 0;"><strong>Parent Password:</strong> ${parentPassword}</p>
+          </div>
+          
+          <button onclick="copyParentCredentials('${parentEmail}', '${parentPassword}')" 
+                  style="background: var(--main-blue); color: white; margin-top: 15px; width: auto; padding: 10px 20px;">
+            📋 Copy Credentials
+          </button>
+        </div>
+        
+        <p style="font-size: 12px; color: #666; margin-top: 15px; text-align: center;">
+          ⚠️ Please save these credentials. They will not be shown again.
+        </p>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  function copyParentCredentials(email, password) {
+    const text = `DSHS Parent Account\nEmail: ${email}\nPassword: ${password}`;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Credentials copied to clipboard!', 'success');
+    });
+  }
+  
+  function showToast(message, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if(existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), 3000);
+  }
+  
   async function sendRecoveryEmail() {
     const email = document.getElementById("recoveryEmail").value.trim();
     if(!email) {
@@ -2552,7 +2676,6 @@
   }
   
   async function logout() {
-    // Clean up all subscriptions
     unsubscribers.forEach(unsub => {
       try {
         unsub();
@@ -2562,7 +2685,6 @@
     });
     unsubscribers = [];
     
-    // Stop QR scanner if running
     if(html5QrCodeScanner) {
       try {
         await html5QrCodeScanner.stop();
@@ -2572,7 +2694,6 @@
       }
     }
     
-    // Handle hardcoded admin logout
     if(currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_")) {
       role = "";
       currentUser = "";
@@ -2590,7 +2711,6 @@
       return;
     }
     
-    // Firebase logout
     try {
       await window.firebaseFns.signOut(auth);
     } catch(error) {
@@ -2812,7 +2932,6 @@
       
       let studentName = currentUser;
       if(role === "teacher") {
-        // Get teacher's section students from Firebase
         const students = await getCollectionData('users', [
           window.firebaseFns.where('role', '==', 'student'),
           window.firebaseFns.where('approved', '==', true)
@@ -2848,7 +2967,6 @@
       content.appendChild(section);
       renderAttendanceCalendar(section, studentName);
       
-      // QR Scanner for teachers
       if(role === "teacher") {
         const scannerDiv = document.createElement("div");
         scannerDiv.id = "qr-scanner";
@@ -2862,7 +2980,6 @@
         scannerResult.style.display = "none";
         section.appendChild(scannerResult);
         
-        // Initialize scanner with delay to ensure DOM is ready
         setTimeout(function(){
           initQRScanner(scannerDiv, section, studentName);
         }, 500);
@@ -2873,7 +2990,6 @@
     else if(tab === "Grades" || tab === "Child Grades") {
       section.innerHTML = "<h3>📊 Grades</h3>";
       
-      // Subscribe to real-time grades updates
       const gradesUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'grades'),
         (snapshot) => {
@@ -2891,7 +3007,6 @@
       );
       unsubscribers.push(gradesUnsubscribe);
       
-      // Semester Selector
       const semSelector = document.createElement("div");
       semSelector.className = "sem-selector";
       semSelector.innerHTML = `
@@ -2900,19 +3015,15 @@
       `;
       section.appendChild(semSelector);
       
-      // Quarter Selector
       const quarterSelector = document.createElement("div");
       quarterSelector.className = "quarter-selector";
       quarterSelector.id = "quarterSelector";
       quarterSelector.innerHTML = `
         <button class="quarter-btn active" onclick="selectQuarter(1, this)">1st Quarter</button>
         <button class="quarter-btn" onclick="selectQuarter(2, this)">2nd Quarter</button>
-        <button class="quarter-btn" onclick="selectQuarter(3, this)">3rd Quarter</button>
-        <button class="quarter-btn" onclick="selectQuarter(4, this)">4th Quarter</button>
       `;
       section.appendChild(quarterSelector);
       
-      // Grade History Toggle
       const historyToggle = document.createElement('label');
       historyToggle.style.cssText = 'display: flex; align-items: center; gap: 10px; margin: 15px 0; cursor: pointer;';
       historyToggle.innerHTML = '<input type="checkbox" id="showHistory" style="width: auto;" onchange="toggleGradeHistory()"> Show Grade History';
@@ -2951,7 +3062,7 @@
       renderGradesTable(section, studentName);
     }
     
-    //------ REPORT CARDS (Teacher) ------
+    //------ REPORT CARDS ------
     else if(tab === "Report Cards" && role === "teacher") {
       section.innerHTML = "<h3>📋 Report Cards</h3>";
       section.innerHTML += "<p>Generate official DepEd-style report cards for students.</p>";
@@ -2985,7 +3096,7 @@
       content.appendChild(section);
     }
     
-    //------ TRANSCRIPT (Grade 12 Students) ------
+    //------ TRANSCRIPT ------
     else if(tab === "Transcript" && role === "student") {
       if(currentUserData.gradeLevel !== "12") {
         section.innerHTML = "<h3>📜 Transcript of Records</h3><p>⚠️ Transcripts are only available for Grade 12 students.</p>";
@@ -2993,7 +3104,6 @@
         section.innerHTML = "<h3>📜 Transcript of Records</h3>";
         section.innerHTML += "<p>Official transcript for college/university applications.</p>";
         
-        // Subscribe to grades for real-time updates
         const gradesUnsubscribe = window.firebaseFns.onSnapshot(
           window.firebaseFns.doc(db, 'grades', currentUserData.name),
           (doc) => {
@@ -3021,7 +3131,6 @@
     else if(tab === "Assignments") {
       section.innerHTML = "<h3>📝 Assignments</h3>";
       
-      // Subscribe to real-time assignments
       const assignmentsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'assignments'),
         (snapshot) => {
@@ -3034,7 +3143,6 @@
       );
       unsubscribers.push(assignmentsUnsubscribe);
       
-      // Subscribe to submissions
       const submissionsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'submissions'),
         (snapshot) => {
@@ -3083,7 +3191,6 @@
     else if(tab === "Quizzes") {
       section.innerHTML = "<h3>❓ Quizzes & Exams</h3>";
       
-      // Subscribe to real-time quizzes
       const quizzesUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'quizzes'),
         (snapshot) => {
@@ -3096,7 +3203,6 @@
       );
       unsubscribers.push(quizzesUnsubscribe);
       
-      // Subscribe to quiz results
       const resultsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'quizResults'),
         (snapshot) => {
@@ -3144,7 +3250,6 @@
     else if(tab === "Course Materials" && role === "student") {
       section.innerHTML = "<h3>📖 Course Materials</h3>";
       
-      // Subscribe to real-time materials
       const materialsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'courseMaterials'),
         (snapshot) => {
@@ -3169,7 +3274,6 @@
     else if(tab === "Messages") {
       section.innerHTML = "<h3>💬 Messages</h3>";
       
-      // Subscribe to real-time messages
       const messagesUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'messages'),
         (snapshot) => {
@@ -3259,7 +3363,6 @@
     else if(tab === "Conference Schedule" || tab === "Conference Booking") {
       section.innerHTML = "<h3>📅 Parent-Teacher Conference</h3>";
       
-      // Subscribe to real-time conferences
       const conferencesUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'conferences'),
         (snapshot) => {
@@ -3297,7 +3400,6 @@
     else if(tab === "Behavior Reports") {
       section.innerHTML = "<h3>📋 Behavioral Records</h3>";
       
-      // Subscribe to real-time behavior logs
       const behaviorUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'behaviorLog'),
         (snapshot) => {
@@ -3352,7 +3454,6 @@
     else if(tab === "Honor Roll") {
       section.innerHTML = "<h3>🏆 Honor Roll & Academic Excellence</h3>";
       
-      // Subscribe to real-time grades for honor roll
       const gradesUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'grades'),
         (snapshot) => {
@@ -3368,7 +3469,6 @@
       );
       unsubscribers.push(gradesUnsubscribe);
       
-      // Subscribe to students
       const studentsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.query(
           window.firebaseFns.collection(db, 'users'),
@@ -3397,7 +3497,6 @@
     else if(tab === "Payments") {
       section.innerHTML = "<h3>💳 Payments & Financial Records</h3>";
       
-      // Subscribe to real-time payments
       const paymentsUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.collection(db, 'payments'),
         (snapshot) => {
@@ -3460,7 +3559,7 @@
       content.appendChild(section);
     }
     
-    //------ SUBJECT SCHEDULE - UPDATED WITH WEEKLY FORMAT ------
+    //------ SUBJECT SCHEDULE ------
     else if(tab === "Subject Schedule" || tab === "Child Schedule") {
       section.innerHTML = "<h3>📚 Weekly Subject Schedule</h3>";
       
@@ -3474,7 +3573,6 @@
         userSection = currentUserData.sectionHandled;
       }
       
-      // Subscribe to schedule updates
       const scheduleUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.doc(db, 'schedules', userSection || 'default'),
         (doc) => {
@@ -3487,7 +3585,6 @@
       );
       unsubscribers.push(scheduleUnsubscribe);
       
-      // Create weekly schedule table
       const scheduleDiv = document.createElement("div");
       scheduleDiv.id = 'scheduleTable';
       scheduleDiv.className = "weekly-schedule";
@@ -3495,7 +3592,6 @@
       
       renderScheduleTable(userSection);
       
-      // Add legend
       const legend = document.createElement("div");
       legend.style.marginTop = "20px";
       legend.style.padding = "15px";
@@ -3508,7 +3604,6 @@
       `;
       section.appendChild(legend);
       
-      // Management controls for teachers/admins
       if(role === "teacher" || role === "admin") {
         section.innerHTML += "<h4>Manage Schedule</h4>";
         section.innerHTML += `
@@ -3521,7 +3616,6 @@
           </div>
         `;
         
-        // Subject management
         section.innerHTML += "<h4 style='margin-top: 25px;'>Subject Management</h4>";
         const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
         subjects.forEach(function(sub, index){
@@ -3571,7 +3665,6 @@
       
       section.innerHTML += "<p style='text-align:center;margin-top:15px;'>📱 Scan this QR code for attendance</p>";
       
-      // Subscribe to real-time attendance
       const attendanceUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.doc(db, 'attendance', currentUser),
         (doc) => {
@@ -3593,7 +3686,7 @@
       content.appendChild(section);
     }
 
-    //------ MY INFO - WITH PHOTO UPLOAD ------
+    //------ MY INFO ------
     else if(tab === "My Info") {
       section.innerHTML = "<h3>👤 My Information</h3>";
       
@@ -3687,7 +3780,6 @@
       if(tab === "Student Approval") {
         section.innerHTML = "<h3>✅ Approve Students</h3>";
         
-        // Subscribe to real-time pending students
         const pendingUnsubscribe = window.firebaseFns.onSnapshot(
           window.firebaseFns.query(
             window.firebaseFns.collection(db, 'users'),
@@ -3735,7 +3827,6 @@
         `;
         section.appendChild(printControls);
         
-        // Subscribe to real-time students
         const studentsUnsubscribe = window.firebaseFns.onSnapshot(
           window.firebaseFns.query(
             window.firebaseFns.collection(db, 'users'),
@@ -3773,7 +3864,6 @@
         section.innerHTML = "<h3>👪 Parent Accounts</h3>";
         section.innerHTML += "<p>📝 These credentials are auto-generated when students sign up.</p>";
         
-        // Subscribe to real-time parent accounts
         const parentsUnsubscribe = window.firebaseFns.onSnapshot(
           window.firebaseFns.collection(db, 'parentAccounts'),
           (snapshot) => {
@@ -3806,7 +3896,6 @@
       else if(tab === "Manage Users") {
         section.innerHTML = "<h3>⚙️ Manage Users</h3>";
         
-        // Subscribe to real-time users
         const usersUnsubscribe = window.firebaseFns.onSnapshot(
           window.firebaseFns.collection(db, 'users'),
           (snapshot) => {
@@ -3917,7 +4006,6 @@
         container.id = 'analyticsContainer';
         section.appendChild(container);
         
-        // Subscribe to real-time analytics
         subscribeToAnalytics((data) => {
           renderAnalytics(data);
         });
@@ -3930,7 +4018,6 @@
     else if(tab === "My Planner" && role === "teacher") {
       section.innerHTML = "<h3>📝 My Planner</h3>";
       
-      // Subscribe to planner data
       const plannerUnsubscribe = window.firebaseFns.onSnapshot(
         window.firebaseFns.doc(db, 'planners', currentUserId),
         (doc) => {
@@ -4078,14 +4165,12 @@
   //====== QR SCANNER INITIALIZATION ======
   async function initQRScanner(container, section, studentName) {
     try {
-      // Check if Html5Qrcode is available
       if(typeof Html5Qrcode === 'undefined') {
         console.error('Html5Qrcode library not loaded');
         container.innerHTML = '<p style="color: red;">QR Scanner library not available. Please refresh the page.</p>';
         return;
       }
       
-      // Stop existing scanner if any
       if(html5QrCodeScanner) {
         await html5QrCodeScanner.stop();
         html5QrCodeScanner = null;
@@ -4117,7 +4202,6 @@
       const scannedStudent = parts[0];
       const today = new Date().toISOString().split("T")[0];
       
-      // Save attendance to Firebase
       await saveAttendance(scannedStudent, today, "P");
       
       const resultDiv = document.getElementById("scanner-result");
@@ -4130,7 +4214,6 @@
       renderAttendanceCalendar(section, studentName);
       addNotification('You were marked present on ' + today, 'attendance', scannedStudent);
       
-      // Stop scanner after successful scan
       if(html5QrCodeScanner) {
         await html5QrCodeScanner.stop();
         html5QrCodeScanner = null;
@@ -4399,7 +4482,6 @@
     const logs = window.realtimeBehaviorLog || {};
     
     if(role === "teacher") {
-      // Show recent records for all students
       const recentRecords = [];
       Object.entries(logs).forEach(([student, entries]) => {
         entries.forEach(entry => {
@@ -4428,7 +4510,6 @@
         });
       }
     } else {
-      // Student or parent view
       let targetStudent = currentUser;
       if(role === "parent") {
         targetStudent = currentUserData.childName || currentUser;
@@ -4645,7 +4726,6 @@
     const container = document.getElementById('scheduleTable');
     if(!container) return;
     
-    // Generate schedule HTML
     let tableHTML = `
       <table>
         <thead>
@@ -4684,9 +4764,7 @@
   }
   
   function getSubjectForSchedule(section, day, period) {
-    // This would typically come from Firebase
     const subjects = ["3I's","Genchem 2","P6 2","Perdev","CPAR","Entrepreneurship"];
-    // Simple hash for demo purposes
     const index = (day.charCodeAt(0) + period.charCodeAt(0)) % subjects.length;
     return subjects[index];
   }
@@ -4717,7 +4795,6 @@
     container.innerHTML = '';
     const planner = window.realtimePlanner || { daily: [], weekly: [], monthly: [] };
     
-    // Daily Goals
     const dailySection = document.createElement('div');
     dailySection.className = 'planner-section';
     dailySection.innerHTML = '<h4>📅 Daily Goals</h4>';
@@ -4742,7 +4819,6 @@
     `;
     container.appendChild(dailySection);
     
-    // Weekly Goals
     const weeklySection = document.createElement('div');
     weeklySection.className = 'planner-section';
     weeklySection.innerHTML = '<h4>📆 Weekly Goals</h4>';
@@ -4766,7 +4842,6 @@
     `;
     container.appendChild(weeklySection);
     
-    // Monthly Goals
     const monthlySection = document.createElement('div');
     monthlySection.className = 'planner-section';
     monthlySection.innerHTML = '<h4>📆 Monthly Goals</h4>';
@@ -4792,7 +4867,6 @@
   }
   
   function renderPendingStudents(section, students) {
-    // Clear existing content except header
     const header = section.querySelector('h3');
     section.innerHTML = '';
     section.appendChild(header);
@@ -4829,7 +4903,6 @@
       filteredStudents = students.filter(s => s.section === filter);
     }
     
-    // Update filter options
     const sections = [...new Set(students.map(s => s.section))];
     const filterSelect = document.getElementById('filterSection');
     if(filterSelect && filterSelect.options.length <= 1) {
@@ -4883,7 +4956,6 @@
       filteredAccounts = accounts.filter(p => p.section === filter);
     }
     
-    // Update filter options
     const sections = [...new Set(accounts.map(p => p.section))];
     const filterSelect = document.getElementById('filterParentSection');
     if(filterSelect && filterSelect.options.length <= 1) {
@@ -5184,7 +5256,6 @@
       calendar.appendChild(div);
     }
     
-    // Load attendance from Firebase
     loadAttendance(studentName).then(attendanceData => {
       for(let day = 1; day <= daysInMonth; day++) {
         const dateStr = year + "-" + month.padStart(2, '0') + "-" + day.toString().padStart(2, '0');
@@ -5249,7 +5320,6 @@
     const table = document.createElement("table");
     table.id = "gradesTable";
     
-    // Get grades from Firebase realtime data
     const gradesData = window.realtimeGrades || {};
     const studentGrades = gradesData[studentName] || {};
     
@@ -5318,7 +5388,6 @@
       
       await window.firebaseFns.setDoc(gradeRef, data);
       
-      // Update grade history
       const historyRef = window.firebaseFns.doc(db, 'gradeHistory', student);
       const historyDoc = await window.firebaseFns.getDoc(historyRef);
       let historyData = {};
@@ -5368,7 +5437,6 @@
   async function approveStudent(studentId) {
     await setDocument('users', studentId, { approved: true });
     
-    // Sync student with teacher after approval
     const studentDoc = await window.firebaseFns.getDoc(window.firebaseFns.doc(db, 'users', studentId));
     if(studentDoc.exists()) {
       const studentData = studentDoc.data();
@@ -5377,7 +5445,6 @@
       await syncStudentWithTeacher();
     }
     
-    // Update analytics
     await updateAnalytics();
     
     addNotification('Your account has been approved!', 'approval', studentId);
@@ -5388,7 +5455,6 @@
     if(confirm("⚠️ Are you sure you want to reject this student?")) {
       await window.firebaseFns.deleteDoc(window.firebaseFns.doc(db, 'users', studentId));
       
-      // Update analytics
       await updateAnalytics();
       
       alert("🗑️ Student rejected");
@@ -5399,7 +5465,6 @@
     if(confirm("⚠️ Are you sure you want to delete this user?")) {
       await window.firebaseFns.deleteDoc(window.firebaseFns.doc(db, 'users', userId));
       
-      // Update analytics
       await updateAnalytics();
       
       alert("🗑️ User deleted");
@@ -5420,7 +5485,7 @@
       return;
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^@[^\s@]+\.[^\s@]+$/;
     if(!emailRegex.test(email)) {
       alert("Please enter a valid email address");
       return;
@@ -5433,8 +5498,10 @@
     
     try {
       const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, email, password);
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', userCredential.user.uid), {
-        uid: userCredential.user.uid,
+      const teacherUid = userCredential.user.uid;
+      
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', teacherUid), {
+        uid: teacherUid,
         name: name,
         teacherId: id,
         position: position,
@@ -5446,10 +5513,12 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics after creating teacher
+      // Auto-sync existing students with same section to this teacher
+      await syncStudentsToNewTeacher(section, teacherUid, name);
+      
       await updateAnalytics();
       
-      alert("✅ Teacher account created successfully!");
+      alert("✅ Teacher account created successfully! Students in section " + section + " have been automatically linked.");
       document.getElementById("newTeacherName").value = "";
       document.getElementById("newTeacherID").value = "";
       document.getElementById("newTeacherPosition").value = "";
@@ -5462,8 +5531,55 @@
     }
   }
   
+  // New function to sync students to newly created teacher
+  async function syncStudentsToNewTeacher(section, teacherId, teacherName) {
+    try {
+      const studentsQuery = window.firebaseFns.query(
+        window.firebaseFns.collection(db, 'users'),
+        window.firebaseFns.where('role', '==', 'student'),
+        window.firebaseFns.where('section', '==', section),
+        window.firebaseFns.where('approved', '==', true)
+      );
+      
+      const studentsSnapshot = await window.firebaseFns.getDocs(studentsQuery);
+      
+      if(!studentsSnapshot.empty) {
+        const students = [];
+        const batch = window.firebaseFns.writeBatch(db);
+        
+        studentsSnapshot.docs.forEach(doc => {
+          const studentData = doc.data();
+          students.push({
+            id: doc.id,
+            name: studentData.name,
+            studentId: studentData.studentId,
+            section: studentData.section,
+            gradeLevel: studentData.gradeLevel,
+            addedAt: new Date().toISOString()
+          });
+          
+          // Update each student with teacher info
+          const studentRef = window.firebaseFns.doc(db, 'users', doc.id);
+          batch.update(studentRef, {
+            teacherId: teacherId,
+            teacherName: teacherName,
+            syncedAt: window.firebaseFns.serverTimestamp()
+          });
+        });
+        
+        // Create teacherStudents document
+        const teacherStudentsRef = window.firebaseFns.doc(db, 'teacherStudents', teacherId);
+        batch.set(teacherStudentsRef, { students });
+        
+        await batch.commit();
+        console.log(`Synced ${students.length} students to new teacher ${teacherName}`);
+      }
+    } catch(error) {
+      console.error('Error syncing students to new teacher:', error);
+    }
+  }
+  
   function updateSubject(index, newValue) {
-    // This would update Firebase in a real implementation
     alert('Subject updated: ' + newValue);
   }
 
@@ -5488,8 +5604,6 @@
   }
 
   //====== MESSAGING FUNCTIONS ======
-  let currentContact = null;
-  
   function selectContact(contact, element) {
     document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
@@ -5717,6 +5831,8 @@
     });
     btn.classList.add("active");
     
+    currentSemester = sem;
+    
     const quarterSelector = document.getElementById("quarterSelector");
     if(quarterSelector) {
       if(sem === 1) {
@@ -5731,6 +5847,8 @@
         `;
       }
     }
+    
+    currentQuarter = sem === 1 ? 1 : 3;
   }
 
   function selectQuarter(quarter, btn) {
@@ -5739,6 +5857,8 @@
       b.classList.remove("active");
     });
     btn.classList.add("active");
+    
+    currentQuarter = quarter;
   }
 
   //====== ADDITIONAL FUNCTIONS FOR FEATURES ======
@@ -5897,7 +6017,6 @@
       });
     }
     
-    // Create modal or alert with HTML
     const modal = document.createElement('div');
     modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; max-width: 600px; max-height: 80vh; overflow-y: auto;';
     modal.innerHTML = html + '<br><button onclick="this.parentElement.remove()" style="background: var(--main-gray); color: white;">Close</button>';
@@ -5951,15 +6070,13 @@
   }
   
   // Quiz Functions
-  let currentQuiz = null;
-  let quizTimer = null;
+  let questionCount = 0;
   
   function showCreateQuiz() {
     const form = document.getElementById('createQuizForm');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
   }
   
-  let questionCount = 0;
   function addQuestion() {
     questionCount++;
     const container = document.getElementById('quizQuestions');
@@ -6026,6 +6143,7 @@
     if(!quiz) return;
     
     currentQuiz = quiz;
+    selectedAnswers = {};
     
     const section = document.querySelector('.section');
     section.innerHTML = `
@@ -6070,8 +6188,6 @@
       }
     }, 1000);
   }
-  
-  let selectedAnswers = {};
   
   function selectOption(questionIdx, optionIdx) {
     selectedAnswers[questionIdx] = optionIdx;
@@ -6196,8 +6312,6 @@
   }
   
   // Payment Functions
-  let selectedPaymentMethod = null;
-  
   function selectPayment(element, method) {
     document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
@@ -6264,7 +6378,6 @@
   }
   
   async function submitEnrollment() {
-    // Create student account from enrollment data
     alert('✅ Enrollment application submitted!\n\nReference Number: ENR-' + Date.now() + '\n\nPlease wait for admin approval.');
     loadSection('Enrollment');
   }
