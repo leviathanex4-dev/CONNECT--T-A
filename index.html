@@ -716,55 +716,6 @@
     border-color: #28a745;
   }
   
-  /* Payment Styles */
-  .payment-method {
-    padding: 20px;
-    border: 2px solid #dee2e6;
-    border-radius: 10px;
-    margin: 10px 0;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .payment-method:hover, .payment-method.selected {
-    border-color: var(--main-blue);
-    background: #f0f8ff;
-  }
-  
-  .payment-icon {
-    font-size: 30px;
-  }
-  
-  .payment-history-item {
-    padding: 15px;
-    border-left: 4px solid var(--main-blue);
-    background: #f8f9fa;
-    margin: 10px 0;
-    border-radius: 0 8px 8px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .payment-status {
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  
-  .payment-status.paid {
-    background: #d4edda;
-    color: #155724;
-  }
-  
-  .payment-status.pending {
-    background: #fff3cd;
-    color: #856404;
-  }
   
   /* Scholarship Card */
   .scholarship-card {
@@ -1199,27 +1150,6 @@
     color: white;
   }
   
-  /* Transcript Styles */
-  .transcript-header {
-    text-align: center;
-    border-bottom: 3px double var(--main-blue);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-  }
-  
-  .transcript-seal {
-    width: 100px;
-    height: 100px;
-    border: 3px solid var(--main-red);
-    border-radius: 50%;
-    margin: 20px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--main-red);
-    font-weight: bold;
-    transform: rotate(-15deg);
-  }
   
   /* Alumni Styles */
   .alumni-card {
@@ -2238,7 +2168,6 @@
     alumni: [],
     quizzes: [],
     quizResults: [],
-    courseMaterials: [],
     behaviorLog: {},
     sectionSubjects: {} // Store subject assignments per section
   };
@@ -2781,15 +2710,12 @@
         {name: "My Info", icon: "👤"},
         {name: "Bulletin Board", icon: "📢"},
         {name: "Grades", icon: "📊"},
-        {name: "Transcript", icon: "📜"},
         {name: "Assignments", icon: "📝"},
         {name: "Quizzes", icon: "❓"},
-        {name: "Course Materials", icon: "📖"},
         {name: "QR Code", icon: "🔳"},
         {name: "Messages", icon: "💬"},
         {name: "My Mood", icon: "😊"},
         {name: "Honor Roll", icon: "🏆"},
-        {name: "Payments", icon: "💳"},
         {name: "Library", icon: "📚"},
         {name: "Emergency Numbers", icon: "🚨"},
         {name: "School Map", icon: "🗺️"},
@@ -3059,86 +2985,6 @@
       content.appendChild(section);
     }
     
-    //------ TRANSCRIPT (Grade 12 Students) ------
-    else if(tab === "Transcript" && role === "student") {
-      if(currentUserData.gradeLevel !== "12") {
-        section.innerHTML = "<h3>📜 Transcript of Records</h3><p>⚠️ Transcripts are only available for Grade 12 students.</p>";
-      } else {
-        section.innerHTML = "<h3>📜 Transcript of Records</h3>";
-        section.innerHTML += "<p>Official transcript for college/university applications.</p>";
-        
-        const transcriptDiv = document.createElement('div');
-        transcriptDiv.className = 'report-card';
-        transcriptDiv.innerHTML = `
-          <div class="transcript-header">
-            <h2>DUMINGAG SENIOR HIGH SCHOOL</h2>
-            <h3>OFFICIAL TRANSCRIPT OF RECORDS</h3>
-            <div class="transcript-seal">OFFICIAL</div>
-          </div>
-          <div style="margin: 20px 0;">
-            <p><strong>Student Name:</strong> ${currentUserData.name}</p>
-            <p><strong>Student ID:</strong> ${currentUserData.studentId}</p>
-            <p><strong>Track/Strand:</strong> ${currentUserData.track} - ${currentUserData.strand}</p>
-            <p><strong>Date of Graduation:</strong> June 2024</p>
-          </div>
-          <h4>Academic Record</h4>
-        `;
-        
-        const gradesTable = document.createElement('table');
-        gradesTable.innerHTML = '<tr><th>Subject</th><th>Grade 11</th><th>Grade 12</th><th>Final</th></tr>';
-        
-        localData.subjects.forEach(sub => {
-          const g11Grade = Math.floor(Math.random() * 15) + 85;
-          const g12Grade = localData.gradesData[currentUserData.name]?.[sub] || 0;
-          const final = Math.round((g11Grade + g12Grade) / 2);
-          
-          gradesTable.innerHTML += `
-            <tr>
-              <td>${sub}</td>
-              <td>${g11Grade}</td>
-              <td>${g12Grade}</td>
-              <td><strong>${final}</strong></td>
-            </tr>
-          `;
-        });
-        
-        transcriptDiv.appendChild(gradesTable);
-        
-        transcriptDiv.innerHTML += `
-          <div style="margin-top: 40px; text-align: center;">
-            <p><em>This is to certify that the above is a true copy of the academic records of the student.</em></p>
-            <div style="margin-top: 60px; display: flex; justify-content: space-around;">
-              <div style="text-align: center;">
-                <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
-                  <strong>School Principal</strong><br>
-                  <small>Signature over Printed Name</small>
-                </div>
-              </div>
-              <div style="text-align: center;">
-                <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 5px;">
-                  <strong>Registrar</strong><br>
-                  <small>Signature over Printed Name</small>
-                </div>
-              </div>
-            </div>
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-              Date Issued: ${new Date().toLocaleDateString()}<br>
-              Reference No: TR-${currentUserData.studentId}-${Date.now()}
-            </p>
-          </div>
-        `;
-        
-        section.appendChild(transcriptDiv);
-        
-        const downloadBtn = document.createElement('button');
-        downloadBtn.innerHTML = '⬇️ Download PDF';
-        downloadBtn.style.cssText = 'background: #28a745; color: white; margin-top: 20px;';
-        downloadBtn.onclick = () => downloadTranscriptPDF(currentUserData);
-        section.appendChild(downloadBtn);
-      }
-      content.appendChild(section);
-    }
-    
     //------ ASSIGNMENTS ------
     else if(tab === "Assignments") {
       section.innerHTML = "<h3>📝 Assignments</h3>";
@@ -3285,33 +3131,6 @@
       content.appendChild(section);
     }
     
-    //------ COURSE MATERIALS ------
-    else if(tab === "Course Materials" && role === "student") {
-      section.innerHTML = "<h3>📖 Course Materials</h3>";
-      
-      localData.subjects.forEach(sub => {
-        const materials = localData.courseMaterials.filter(m => m.subject === sub && (m.section === 'all' || m.section === currentUserData.section));
-        if(materials.length > 0) {
-          section.innerHTML += `<h4>${sub}</h4>`;
-          materials.forEach(m => {
-            section.innerHTML += `
-              <div style="padding: 15px; border: 2px solid #dee2e6; border-radius: 10px; margin: 10px 0;">
-                <h5>${m.title}</h5>
-                <p>${m.description}</p>
-                <p style="font-size: 12px; color: #666;">Uploaded: ${new Date(m.uploadedAt).toLocaleDateString()}</p>
-                <a href="${m.fileUrl}" download style="display: inline-block; padding: 8px 15px; background: var(--main-blue); color: white; border-radius: 5px; text-decoration: none; margin-top: 10px;">⬇️ Download</a>
-              </div>
-            `;
-          });
-        }
-      });
-      
-      if(section.innerHTML === "<h3>📖 Course Materials</h3>") {
-        section.innerHTML += "<p>No materials uploaded yet.</p>";
-      }
-      
-      content.appendChild(section);
-    }
     
     //------ MESSAGES ------
     else if(tab === "Messages") {
@@ -3631,109 +3450,6 @@
       content.appendChild(section);
     }
     
-    //------ PAYMENTS ------
-    else if(tab === "Payments") {
-      section.innerHTML = "<h3>💳 Payments & Financial Records</h3>";
-      
-      if(role === "admin") {
-        section.innerHTML += `
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h4>Scholarship Management</h4>
-            <button onclick="showAddScholarship()" style="background: #28a745; color: white; width: auto;">➕ Add Scholarship</button>
-          </div>
-        `;
-        
-        const activeScholarships = localData.scholarships.filter(s => s.active);
-        if(activeScholarships.length > 0) {
-          section.innerHTML += "<h4>Active Scholarships</h4>";
-          activeScholarships.forEach(s => {
-            section.innerHTML += `
-              <div class="scholarship-card">
-                <h4>${s.name}</h4>
-                <p>${s.description}</p>
-                <p><strong>Discount:</strong> ${s.discount}% | <strong>Recipients:</strong> ${s.recipients?.length || 0}</p>
-              </div>
-            `;
-          });
-        }
-      } else {
-        let targetUser = currentUser;
-        if(role === "parent") {
-          targetUser = currentUserData.childName || currentUser;
-        }
-        
-        const myScholarships = localData.scholarships.filter(s => s.recipients?.includes(targetUser));
-        if(myScholarships.length > 0) {
-          section.innerHTML += `
-            <div class="scholarship-card">
-              <h4>🎓 Your Scholarships</h4>
-              ${myScholarships.map(s => `
-                <p><strong>${s.name}</strong> - ${s.discount}% discount</p>
-              `).join('')}
-            </div>
-          `;
-        }
-        
-        const myPayments = localData.payments.filter(p => p.student === targetUser);
-        const balance = 15000 - myPayments.reduce((a,p) => a + p.amount, 0);
-        
-        section.innerHTML += `
-          <div class="performance-box" style="background: ${balance > 0 ? 'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)' : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'}">
-            <h3>Outstanding Balance</h3>
-            <div class="stat-number">₱${balance.toLocaleString()}</div>
-            <p>${balance > 0 ? 'Please settle your balance' : '✅ Fully Paid'}</p>
-          </div>
-        `;
-        
-        if(balance > 0) {
-          section.innerHTML += `
-            <h4>Make Payment</h4>
-            <div class="payment-method" onclick="selectPayment(this, 'gcash')">
-              <span class="payment-icon">📱</span>
-              <div>
-                <strong>GCash</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">Pay via GCash e-wallet</p>
-              </div>
-            </div>
-            <div class="payment-method" onclick="selectPayment(this, 'bank')">
-              <span class="payment-icon">🏦</span>
-              <div>
-                <strong>Bank Transfer</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">BDO, BPI, Metrobank</p>
-              </div>
-            </div>
-            <div class="payment-method" onclick="selectPayment(this, 'card')">
-              <span class="payment-icon">💳</span>
-              <div>
-                <strong>Credit/Debit Card</strong>
-                <p style="margin: 0; font-size: 12px; color: #666;">Visa, Mastercard</p>
-              </div>
-            </div>
-            <input type="number" id="paymentAmount" placeholder="Amount to pay" max="${balance}">
-            <button onclick="processPayment()" style="background: #28a745; color: white; margin-top: 10px;">💳 Pay Now</button>
-          `;
-        }
-        
-        if(myPayments.length > 0) {
-          section.innerHTML += "<h4>Payment History</h4>";
-          myPayments.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(p => {
-            section.innerHTML += `
-              <div class="payment-history-item">
-                <div>
-                  <strong>${p.method.toUpperCase()}</strong><br>
-                  <small>${new Date(p.date).toLocaleDateString()}</small>
-                </div>
-                <div style="text-align: right;">
-                  <strong>₱${p.amount.toLocaleString()}</strong><br>
-                  <span class="payment-status paid">✅ Paid</span>
-                </div>
-              </div>
-            `;
-          });
-        }
-      }
-      content.appendChild(section);
-    }
     
     //------ LIBRARY ------
     else if(tab === "Library") {
@@ -5458,9 +5174,6 @@
     container.appendChild(printBtn);
   }
   
-  function downloadTranscriptPDF(student) {
-    alert('📄 In a real implementation, this would generate a PDF using jsPDF.\n\nStudent: ' + student.name + '\nReference: TR-' + student.studentId + '-' + Date.now());
-  }
   
   // Assignment Functions
   function showCreateAssignment() {
@@ -5802,47 +5515,6 @@
     loadSection('Behavior Reports');
   }
   
-  // Payment Functions
-  let selectedPaymentMethod = null;
-  
-  function selectPayment(element, method) {
-    document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
-    selectedPaymentMethod = method;
-  }
-  
-  function processPayment() {
-    const amount = parseFloat(document.getElementById('paymentAmount').value);
-    
-    if(!amount || amount <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-    
-    if(!selectedPaymentMethod) {
-      alert('Please select a payment method');
-      return;
-    }
-    
-    const refNum = 'PAY-' + Date.now();
-    
-    localData.payments.push({
-      id: refNum,
-      student: currentUser,
-      amount,
-      method: selectedPaymentMethod,
-      date: new Date().toISOString(),
-      status: 'completed',
-      reference: refNum
-    });
-    
-    saveLocalData();
-    
-    addNotification(`Payment of ₱${amount.toLocaleString()} received. Ref: ${refNum}`, 'payment', currentUser);
-    
-    alert(`✅ Payment successful!\n\nReference: ${refNum}\nAmount: ₱${amount.toLocaleString()}`);
-    loadSection('Payments');
-  }
   
   // Library Functions
   function addBook() {
