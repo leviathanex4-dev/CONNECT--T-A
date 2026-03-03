@@ -2044,8 +2044,8 @@
       <span class="signup-link" onclick="showForgotPassword()">Forgot Password?</span> | 
       <span class="signup-link" onclick="showSignup()">Sign up!</span>
     </p>
-    <p style="font-size: 11px; color: #666; margin-top: 15px; padding: 8px; background: #f8f9fa; border-radius: 5px;">
-      🔑 <strong>Admin Login:</strong> Username: <code>admin</code> | Password: <code>admin</code>
+    <p style="font-size: 11px; color: #666; text-align: left; margin-top: 5px;">
+      Password must contain: 8+ characters, uppercase, lowercase, number, special character
     </p>
   </div>
 </div>
@@ -2511,12 +2511,19 @@
       localData.attendanceData[name] = {};
       saveLocalData();
       
-      const parentPassword = Math.random().toString(36).slice(-8);
-      const parentEmail = `parent.${email}`;
+      // --- Create Parent Account (for demonstration) ---
+      // This approach is for demonstration purposes. For a production system,
+      // consider using Firebase Cloud Functions for secure server-side account creation.
+      
+      const emailParts = email.split('@');
+      const parentEmail = `parent.${emailParts[0]}@${emailParts[1]}`;
+      const parentPassword = password; // Using same password for demo convenience
       
       const parentCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', parentCredential.user.uid), {
-        uid: parentCredential.user.uid,
+      const parentUid = parentCredential.user.uid;
+      
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', parentUid), {
+        uid: parentUid,
         name: `Parent of ${name}`,
         childName: name,
         childId: id,
@@ -2526,10 +2533,33 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      await window.firebaseFns.signOut(auth);
+      // Also create entry in parentAccounts collection so admin can see credentials
+      try {
+        await window.firebaseFns.setDoc(
+          window.firebaseFns.doc(db, 'parentAccounts', parentUid),
+          {
+            studentName: name,
+            studentId: id,
+            section: section,
+            parentEmail: parentEmail,
+            parentPassword: parentPassword,
+            parentId: parentUid,
+            createdAt: window.firebaseFns.serverTimestamp()
+          }
+        );
+      } catch(e) {
+        console.warn('Could not create parentAccounts entry (check Firestore rules):', e);
+      }
+      
+      await window.firebaseFns.signOut(auth); // Sign out the newly created parent to return to student login
+      
       document.getElementById('loadingOverlay').style.display = 'none';
       
-      alert(`✅ Signup successful! Your account is pending approval.\n\nParent Account:\nEmail: ${parentEmail}\nPassword: ${parentPassword}\n\nPlease save these credentials!`);
+      alert(`✅ Signup successful! Your student account is pending approval.
+A parent account was also created:
+Email: ${parentEmail}
+Password: ${parentPassword}
+Please save these credentials!`);
       clearSignup();
       showLogin();
       
@@ -3080,7 +3110,7 @@
           <button onclick="showCreateQuiz()" style="background: #28a745; color: white; width: auto; margin-bottom: 20px;">➕ Create Quiz</button>
           <div id="createQuizForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px;">
             <input type="text" id="quizTitle" placeholder="Quiz Title">
-            <select id="quizSubject">${localData.subjects.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+            <select id="quizSubject">${localData.subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
             <input type="number" id="quizDuration" placeholder="Duration (minutes)" value="30">
             <input type="datetime-local" id="quizStart">
             <input type="datetime-local" id="quizEnd">
@@ -3452,7 +3482,6 @@
       content.appendChild(section);
     }
     
-    
     //------ LIBRARY ------
     else if(tab === "Library") {
       section.innerHTML = "<h3>📚 Library Management</h3>";
@@ -3460,7 +3489,7 @@
       if(role === "admin") {
         section.innerHTML += `
           <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h4>Add New Book</h4>
+            <h4>Add New Book</h3>
             <input type="text" id="bookTitle" placeholder="Title">
             <input type="text" id="bookAuthor" placeholder="Author">
             <input type="text" id="bookISBN" placeholder="ISBN">
@@ -3795,7 +3824,7 @@
       scheduleDiv.className = "weekly-schedule";
       
       let tableHTML = `
-        <table>
+        <table id="scheduleTable">
           <thead>
             <tr>
               <th>Time / Day</th>
@@ -3823,7 +3852,9 @@
           } else {
             // Get subject for this slot (from localData or generate based on section)
             const subject = getSubjectForSlot(userSection, day, period.name);
-            tableHTML += `<td>${subject}</td>`;
+            const cellId = `cell-${day}-${period.name}`;
+            const clickable = (role === "teacher" || role === "admin") ? `style="cursor: pointer;" onclick='openSubjectEditor("${day}", "${period.name}", "${userSection}")'` : '';
+            tableHTML += `<td id="${cellId}" ${clickable}>${subject}</td>`;
           }
         });
         
@@ -4123,14 +4154,18 @@
       //------ PARENT ACCOUNTS ------
       else if(tab === "Parent Accounts") {
         section.innerHTML = "<h3>👪 Parent Accounts</h3>";
-        section.innerHTML += "<p>📝 These credentials are auto-generated when students sign up.</p>";
+        section.innerHTML += "<p>📝 These accounts are linked to student sign-ups.</p>";
         
-        const parentAccounts = await getCollectionData('parentAccounts');
+        // Fetch users with role 'parent'
+        const parentUsers = await getCollectionData('users', [
+          window.firebaseFns.where('role', '==', 'parent')
+        ]);
         
         const filterSection = document.createElement("select");
         filterSection.id = "filterParentSection";
         filterSection.innerHTML = "<option value='all'>📋 All Sections</option>";
-        const sections = [...new Set(parentAccounts.map(function(p){ return p.section; }))];
+        // Collect unique sections from linked student data
+        const sections = [...new Set(parentUsers.map(function(p){ return p.section || p.childSection; }).filter(Boolean))];
         sections.forEach(function(sec){
           const opt = document.createElement("option");
           opt.value = sec;
@@ -4144,10 +4179,10 @@
         section.appendChild(parentContainer);
         
         filterSection.onchange = function(){
-          renderParentAccounts(parentContainer, this.value, parentAccounts);
+          renderParentAccounts(parentContainer, this.value, parentUsers);
         };
         
-        renderParentAccounts(parentContainer, "all", parentAccounts);
+        renderParentAccounts(parentContainer, "all", parentUsers);
         
         content.appendChild(section);
       }
@@ -4159,6 +4194,7 @@
         const allUsers = await getCollectionData('users');
         const students = allUsers.filter(u => u.role === 'student');
         const teachers = allUsers.filter(u => u.role === 'teacher');
+        const parents = allUsers.filter(u => u.role === 'parent');
         
         section.innerHTML += "<h4>👨‍🎓 Students</h4>";
         const studentsTable = document.createElement("table");
@@ -4169,9 +4205,10 @@
             '<td><button onclick="deleteUser(\'' + s.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
           studentsTable.appendChild(tr);
         });
+        studentsTable.style.marginBottom = '25px'; // Add some spacing
         section.appendChild(studentsTable);
         
-        section.innerHTML += "<h4 style='margin-top:25px;'>👨‍🏫 Teachers</h4>";
+        section.innerHTML += "<h4>👨‍🏫 Teachers</h4>";
         const teachersTable = document.createElement("table");
         teachersTable.innerHTML = "<tr><th>Name</th><th>ID</th><th>Section</th><th>Action</th></tr>";
         teachers.forEach(function(t){
@@ -4180,7 +4217,19 @@
             '<td><button onclick="deleteUser(\'' + t.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
           teachersTable.appendChild(tr);
         });
+        teachersTable.style.marginBottom = '25px'; // Add some spacing
         section.appendChild(teachersTable);
+
+        section.innerHTML += "<h4>👪 Parents</h4>";
+        const parentsTable = document.createElement("table");
+        parentsTable.innerHTML = "<tr><th>Name</th><th>Email</th><th>Child Name</th><th>Child ID</th><th>Action</th></tr>";
+        parents.forEach(function(p){
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td>' + p.name + '</td><td>' + p.email + '</td><td>' + (p.childName || '-') + '</td><td>' + (p.childId || '-') + '</td>' +
+            '<td><button onclick="deleteUser(\'' + p.id + '\')" style="background:#dc3545;color:white;width:auto;padding:6px 12px;">🗑️ Delete</button></td>';
+          parentsTable.appendChild(tr);
+        });
+        section.appendChild(parentsTable);
         
         content.appendChild(section);
       }
@@ -4606,28 +4655,29 @@
     });
   }
 
-  function renderParentAccounts(container, sectionFilter, parentAccounts) {
+  function renderParentAccounts(container, sectionFilter, parentUsers) {
     container.innerHTML = "";
     
-    let filteredAccounts = parentAccounts;
+    let filteredUsers = parentUsers;
     if(sectionFilter !== "all") {
-      filteredAccounts = parentAccounts.filter(function(p){ return p.section === sectionFilter; });
+      filteredUsers = parentUsers.filter(function(p){ return p.section === sectionFilter || p.childSection === sectionFilter; });
     }
     
-    if(filteredAccounts.length === 0) {
+    if(filteredUsers.length === 0) {
       container.innerHTML = "<p>❌ No parent accounts found.</p>";
       return;
     }
     
-    filteredAccounts.forEach(function(p){
+    filteredUsers.forEach(function(p){
       const card = document.createElement("div");
       card.className = "parent-account-card";
-      card.innerHTML = '<h4>👤 ' + p.studentName + '</h4>' +
-        '<p><strong>🆔 Student ID:</strong> ' + p.studentId + '</p>' +
-        '<p><strong>🏫 Section:</strong> ' + p.section + '</p>' +
+      card.innerHTML = '<h4>👤 ' + (p.name || 'N/A') + '</h4>' +
+        '<p><strong>📧 Email:</strong> ' + (p.email || 'N/A') + '</p>' +
+        '<p><strong>👨‍👩‍👧 Child Name:</strong> ' + (p.childName || 'N/A') + '</p>' +
+        '<p><strong>🆔 Child ID:</strong> ' + (p.childId || 'N/A') + '</p>' +
+        '<p><strong>🏫 Child Section:</strong> ' + (p.section || p.childSection || 'N/A') + '</p>' +
         '<div class="credentials">' +
-        '<p><strong>👨‍💼 Parent Email:</strong> ' + p.parentEmail + '</p>' +
-        '<p><strong>🔑 Parent Password:</strong> ' + p.parentPassword + '</p>' +
+        '<p><strong>🔑 Parent Password:</strong> Not accessible for security reasons.</p>' +
         '</div>';
       container.appendChild(card);
     });
