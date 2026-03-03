@@ -15,7 +15,7 @@
 
 <!-- Firebase SDK (v9 Modular) - FIXED: Removed spaces in URLs -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
@@ -44,6 +44,7 @@
     window.firebaseAnalytics = analytics;
     window.firebaseStorage = storage;
     window.firebaseFns = {
+      initializeApp, getAuth, deleteApp, // Added for user creation management
       onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, updatePassword,
       collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch,
       ref, uploadBytes, getDownloadURL
@@ -2197,28 +2198,45 @@
   //====== FIREBASE DATA FUNCTIONS ======
   async function loadUserData(uid) {
     try {
-      const userDoc = await window.firebaseFns.getDoc(window.firebaseFns.doc(db, 'users', uid));
+      const userDocRef = window.firebaseFns.doc(db, 'users', uid);
+      const userDoc = await window.firebaseFns.getDoc(userDocRef);
+      
       if(userDoc.exists()) {
         currentUserData = userDoc.data();
         role = currentUserData.role;
         currentUser = currentUserData.name || currentUserData.email;
-        
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('signup').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        
-        // Sync student with teacher if approved
-        if(role === 'student' && currentUserData.approved && currentUserData.section) {
-          await syncStudentWithTeacher();
-        }
-        
-        loadDashboard();
-        startSessionTimer();
-        addNotification('Welcome back, ' + currentUser + '!', 'system');
+      } else if (auth.currentUser && auth.currentUser.email === "admin@gmail.com") {
+        // Auto-initialize the new admin account if Firestore doc is missing
+        console.log('Initializing new admin account in Firestore');
+        currentUserData = {
+          uid: uid,
+          name: "System Administrator",
+          email: "admin@gmail.com",
+          role: "admin",
+          approved: true,
+          createdAt: window.firebaseFns.serverTimestamp()
+        };
+        await window.firebaseFns.setDoc(userDocRef, currentUserData);
+        role = "admin";
+        currentUser = "System Administrator";
       } else {
-        console.error('User document not found');
-        showError('User data not found');
+        console.error('User document not found for UID:', uid);
+        showError('User profile not found. Please contact support.');
+        return;
       }
+
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('signup').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      
+      // Sync student with teacher if approved
+      if(role === 'student' && currentUserData.approved && currentUserData.section) {
+        await syncStudentWithTeacher();
+      }
+      
+      loadDashboard();
+      startSessionTimer();
+      addNotification('Welcome back, ' + currentUser + '!', 'system');
     } catch(error) {
       console.error('Error loading user data:', error);
       showError('Error loading user data');
@@ -2454,15 +2472,15 @@
     
     try {
       document.getElementById('loadingOverlay').style.display = 'flex';
-      document.getElementById('loadingStatus').textContent = 'Creating account...';
+      document.getElementById('loadingStatus').textContent = 'Creating student account...';
       
-      // Create student account
+      // 1. Create student Auth account
       const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
+      const studentUid = userCredential.user.uid;
       
-      // Save student data
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', uid), {
-        uid,
+      // 2. Save student Firestore data
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', studentUid), {
+        uid: studentUid,
         name,
         studentId: id,
         section,
@@ -2478,13 +2496,24 @@
       // Update analytics
       await updateAnalytics();
       
-      // Create parent account
-      const parentPassword = Math.random().toString(36).slice(-8);
-      const parentEmail = `parent.${email}`;
+      document.getElementById('loadingStatus').textContent = 'Creating parent account...';
       
-      const parentCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', parentCredential.user.uid), {
-        uid: parentCredential.user.uid,
+      // 3. Create parent account using SECONDARY APP to avoid session logout
+      const parentPassword = Math.random().toString(36).slice(-8);
+      const parentEmail = `parent_${Date.now()}@dshs.edu`; // Unique internal email
+      
+      const secondaryApp = window.firebaseFns.initializeApp(window.firebaseApp.options, "ParentCreationApp");
+      const secondaryAuth = window.firebaseFns.getAuth(secondaryApp);
+      
+      const parentCredential = await window.firebaseFns.createUserWithEmailAndPassword(secondaryAuth, parentEmail, parentPassword);
+      const parentUid = parentCredential.user.uid;
+      
+      // Clean up secondary app
+      await window.firebaseFns.deleteApp(secondaryApp);
+
+      // 4. Save parent Firestore data
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', parentUid), {
+        uid: parentUid,
         name: `Parent of ${name}`,
         childName: name,
         childId: id,
@@ -2495,11 +2524,8 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Update analytics
-      await updateAnalytics();
-      
-      // Store parent account info
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'parentAccounts', parentCredential.user.uid), {
+      // 5. Store parent credentials for Admin (using current Auth session which is the Student)
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'parentAccounts', parentUid), {
         studentName: name,
         studentId: id,
         section: section,
@@ -2508,11 +2534,33 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
-      // Sign out and show success
+      // Update analytics
+      await updateAnalytics();
+      
+      // Sign out the current session (Student)
       await window.firebaseFns.signOut(auth);
       document.getElementById('loadingOverlay').style.display = 'none';
       
-      alert(`✅ Signup successful! Your account is pending approval.\n\nParent Account:\nEmail: ${parentEmail}\nPassword: ${parentPassword}\n\nPlease save these credentials!`);
+      // Show credentials in a way they can be copied
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+          <h3 style="color: var(--success-green);">🎉 Signup Successful!</h3>
+          <p>Your account is pending approval.</p>
+          <hr>
+          <h4 style="color: var(--main-blue);">👨‍👩‍👧 Parent Account</h4>
+          <p style="font-size: 13px; color: #666;">Provide these to your parent/guardian:</p>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; border: 1px dashed #ccc;">
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${parentEmail}</p>
+            <p style="margin: 5px 0;"><strong>Password:</strong> ${parentPassword}</p>
+          </div>
+          <p style="font-size: 11px; color: #dc3545;">⚠️ Save these! They will not be shown again.</p>
+          <button onclick="this.closest('.modal-overlay').remove()" style="background: var(--main-blue); color: white; margin-top: 15px;">Close & Login</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
       clearSignup();
       showLogin();
       
@@ -2525,8 +2573,6 @@
         errorMsg = "Email already registered";
       } else if(error.code === 'auth/weak-password') {
         errorMsg = "Password is too weak";
-      } else if(error.code === 'auth/invalid-email') {
-        errorMsg = "Invalid email address";
       } else if(error.message) {
         errorMsg = error.message;
       }
@@ -2801,6 +2847,12 @@
   
   //====== SECTION LOADING FUNCTIONS ======
   async function loadSection(tab) {
+    // Clear previous section listeners
+    unsubscribers.forEach(unsub => {
+      try { unsub(); } catch(e) { console.error('Error unsubscribing:', e); }
+    });
+    unsubscribers = [];
+
     const content = document.getElementById("content");
     content.innerHTML = "";
     const section = document.createElement("div");
@@ -5432,9 +5484,21 @@
     }
     
     try {
-      const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(auth, email, password);
-      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', userCredential.user.uid), {
-        uid: userCredential.user.uid,
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('loadingStatus').textContent = 'Creating teacher account...';
+
+      // USE SECONDARY APP TO PREVENT ADMIN LOGOUT
+      const secondaryApp = window.firebaseFns.initializeApp(window.firebaseApp.options, "TeacherCreationApp");
+      const secondaryAuth = window.firebaseFns.getAuth(secondaryApp);
+      
+      const userCredential = await window.firebaseFns.createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const teacherUid = userCredential.user.uid;
+      
+      // Clean up secondary app
+      await window.firebaseFns.deleteApp(secondaryApp);
+
+      await window.firebaseFns.setDoc(window.firebaseFns.doc(db, 'users', teacherUid), {
+        uid: teacherUid,
         name: name,
         teacherId: id,
         position: position,
@@ -5446,19 +5510,71 @@
         createdAt: window.firebaseFns.serverTimestamp()
       });
       
+      // Sync students already in this section to the new teacher
+      await syncStudentsToNewTeacher(section, teacherUid, name);
+      
       // Update analytics after creating teacher
       await updateAnalytics();
       
-      alert("✅ Teacher account created successfully!");
-      document.getElementById("newTeacherName").value = "";
-      document.getElementById("newTeacherID").value = "";
-      document.getElementById("newTeacherPosition").value = "";
-      document.getElementById("newTeacherSection").value = "";
-      document.getElementById("newTeacherUsername").value = "";
-      document.getElementById("newTeacherEmail").value = "";
-      document.getElementById("newTeacherPassword").value = "";
+      alert("✅ Teacher account created successfully! Students in section " + section + " have been automatically linked.");
+      
+      // Clear inputs
+      ["newTeacherName", "newTeacherID", "newTeacherPosition", "newTeacherSection", "newTeacherUsername", "newTeacherEmail", "newTeacherPassword"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      
+      document.getElementById('loadingOverlay').style.display = 'none';
     } catch(error) {
+      document.getElementById('loadingOverlay').style.display = 'none';
       alert("❌ " + error.message);
+    }
+  }
+
+  // Sync existing students to a newly created teacher
+  async function syncStudentsToNewTeacher(section, teacherId, teacherName) {
+    try {
+      const studentsQuery = window.firebaseFns.query(
+        window.firebaseFns.collection(db, 'users'),
+        window.firebaseFns.where('role', '==', 'student'),
+        window.firebaseFns.where('section', '==', section),
+        window.firebaseFns.where('approved', '==', true)
+      );
+      
+      const studentsSnapshot = await window.firebaseFns.getDocs(studentsQuery);
+      
+      if(!studentsSnapshot.empty) {
+        const students = [];
+        const batch = window.firebaseFns.writeBatch(db);
+        
+        studentsSnapshot.docs.forEach(doc => {
+          const studentData = doc.data();
+          students.push({
+            id: doc.id,
+            name: studentData.name,
+            studentId: studentData.studentId,
+            section: studentData.section,
+            gradeLevel: studentData.gradeLevel,
+            addedAt: new Date().toISOString()
+          });
+          
+          // Update student doc with teacher info
+          const studentRef = window.firebaseFns.doc(db, 'users', doc.id);
+          batch.update(studentRef, {
+            teacherId: teacherId,
+            teacherName: teacherName,
+            syncedAt: window.firebaseFns.serverTimestamp()
+          });
+        });
+        
+        // Update teacher's student list
+        const teacherStudentsRef = window.firebaseFns.doc(db, 'teacherStudents', teacherId);
+        batch.set(teacherStudentsRef, { students });
+        
+        await batch.commit();
+        console.log(`Synced ${students.length} students to new teacher ${teacherName}`);
+      }
+    } catch(error) {
+      console.error('Error syncing students to new teacher:', error);
     }
   }
   
