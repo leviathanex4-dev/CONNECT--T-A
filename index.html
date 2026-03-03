@@ -2028,7 +2028,10 @@
 
 <div class="login" id="login">
   <div class="box">
-    <h2>🎓 DSHS Login</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="LOGO.png-removebg-preview.png" alt="Logo" style="width: 192px; height: auto;">
+    </div>
+    <h2>🎓 CONNECT-TA LOGIN</h2>
     <input type="text" id="loginEmail" placeholder="📧 Email or Username">
     <div class="pass-wrapper">
       <input type="password" id="loginPassword" placeholder="🔒 Password">
@@ -2060,6 +2063,9 @@
 
 <div class="login" id="signup" style="display:none;">
   <div class="box">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="logo.png" alt="Logo" style="width: 192px; height: auto;">
+    </div>
     <h2>📝 Student Sign Up</h2>
     <input type="text" id="signupName" placeholder="👤 Full Name">
     <input type="text" id="signupID" placeholder="🆔 Student I.D">
@@ -2102,8 +2108,8 @@
     <div class="menu" id="menu"></div>
     <div class="content" id="content">
       <div class="school-welcome">
-        <h2>🏫 Dumingag Senior High School</h2>
-        <p>Welcome to the DSHS School System</p>
+        <h2>🏫 CONNECT TA!</h2>
+        <p>Welcome to the CONNECT TA School System</p>
       </div>
       <div class="section"><h3>👋 Welcome</h3><p>Select an option from the menu to get started.</p></div>
     </div>
@@ -2749,12 +2755,8 @@
         {name: "Manage Users", icon: "⚙️"},
         {name: "Enrollment", icon: "📝"},
         {name: "Class Scheduling", icon: "📅"},
-        {name: "Room Booking", icon: "🏫"},
-        {name: "Library Management", icon: "📚"},
         {name: "Honor Roll", icon: "🏆"},
         {name: "Analytics", icon: "📊"},
-        {name: "Scholarships", icon: "🎓"},
-        {name: "Alumni", icon: "🎓"},
         {name: "Bulletin Board", icon: "📢"},
         {name: "Emergency Numbers", icon: "🚨"},
         {name: "School Map", icon: "🗺️"},
@@ -4289,42 +4291,7 @@
       const mapContainer = document.createElement("div");
       mapContainer.className = "school-map-container";
       mapContainer.innerHTML = `
-        <h4>🏫 DSHS Campus Layout</h4>
-        <img src="https://via.placeholder.com/800x600" alt="DSHS School Map" style="max-width:100%;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-        <div class="map-legend">
-          <div class="map-legend-item">
-            <strong>🏢 Building A</strong>
-            Main Entrance & Administration
-          </div>
-          <div class="map-legend-item">
-            <strong>🏫 Building B</strong>
-            Classrooms 12-A, 12-B, 12-C
-          </div>
-          <div class="map-legend-item">
-            <strong>🔬 Building C</strong>
-            Science Laboratory
-          </div>
-          <div class="map-legend-item">
-            <strong>📚 Building D</strong>
-            Library & Computer Room
-          </div>
-          <div class="map-legend-item">
-            <strong>👨‍🏫 Building E</strong>
-            Faculty Room
-          </div>
-          <div class="map-legend-item">
-            <strong>🏀 Gymnasium</strong>
-            Physical Education Activities
-          </div>
-          <div class="map-legend-item">
-            <strong>🍽️ Cafeteria</strong>
-            Student Lounge
-          </div>
-          <div class="map-legend-item">
-            <strong>💼 Guidance Office</strong>
-            Counseling Services
-          </div>
-        </div>
+        <img src="map.png" alt="DSHS School Map" style="max-width:100%; height:auto; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
       `;
       section.appendChild(mapContainer);
       
