@@ -280,6 +280,10 @@ async function syncStudentWithTeacher() {
 }
 
 async function getCollectionData(collectionName, constraints = []) {
+  if (!db) {
+    console.warn('Database not initialized yet');
+    return [];
+  }
   try {
     const q = window.firebaseFns.query(
       window.firebaseFns.collection(db, collectionName),
@@ -288,12 +292,13 @@ async function getCollectionData(collectionName, constraints = []) {
     const snapshot = await window.firebaseFns.getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch(error) {
-    console.error('Error getting collection:', error);
+    console.warn(`Error getting collection ${collectionName}:`, error.message);
     return [];
   }
 }
 
 async function setDocument(collectionName, docId, data) {
+  if (!db) return false;
   try {
     await window.firebaseFns.setDoc(
       window.firebaseFns.doc(db, collectionName, docId),
@@ -302,13 +307,18 @@ async function setDocument(collectionName, docId, data) {
     );
     return true;
   } catch(error) {
-    console.error('Error setting document:', error);
-    showError('Failed to save data');
+    console.error(`Error setting document in ${collectionName}/${docId}:`, error.message);
+    if (error.code === 'permission-denied') {
+      console.warn('Write permission denied - expected for hardcoded admin');
+    } else {
+      showError('Failed to save data: ' + error.message);
+    }
     return false;
   }
 }
 
 async function addDocument(collectionName, data) {
+  if (!db) return null;
   try {
     const docRef = await window.firebaseFns.addDoc(
       window.firebaseFns.collection(db, collectionName),
@@ -316,8 +326,12 @@ async function addDocument(collectionName, data) {
     );
     return docRef.id;
   } catch(error) {
-    console.error('Error adding document:', error);
-    showError('Failed to add data');
+    console.error(`Error adding document to ${collectionName}:`, error.message);
+    if (error.code === 'permission-denied') {
+      console.warn('Write permission denied - expected for hardcoded admin');
+    } else {
+      showError('Failed to add data: ' + error.message);
+    }
     return null;
   }
 }
@@ -3417,6 +3431,121 @@ async function syncStudentsToNewTeacher(section, teacherId, teacherName) {
   }
 }
 
+//====== NOTIFICATION FUNCTIONS ======
+async function addNotification(message, type = 'info', recipientId = null) {
+  // Defensive check: Hardcoded admin or unauthenticated users can't write to notifications collection
+  if (!auth.currentUser || (currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_"))) {
+    console.log('Skipping Firestore notification for unauthenticated/hardcoded user');
+    return;
+  }
+
+  try {
+    await addDocument('notifications', {
+      message,
+      type,
+      recipientId: recipientId || currentUserId,
+      date: new Date().toISOString(),
+      read: false
+    });
+    
+    updateNotificationBadge();
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('DSHS School System', {
+        body: message,
+        icon: './icon-192x192.png'
+      });
+    }
+  } catch(error) {
+    console.error('Error adding notification:', error);
+  }
+}
+
+async function updateNotificationBadge() {
+  if (!auth.currentUser || (currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_"))) {
+    return;
+  }
+
+  try {
+    const notifications = await getCollectionData('notifications', [
+      window.firebaseFns.where('recipientId', '==', currentUserId),
+      window.firebaseFns.where('read', '==', false)
+    ]);
+    
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+      if(notifications.length > 0) {
+        badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  } catch(error) {
+    console.error('Error updating notification badge:', error);
+  }
+}
+
+function toggleNotifications() {
+  const panel = document.getElementById('notificationPanel');
+  if (panel) {
+    panel.classList.toggle('show');
+    if(panel.classList.contains('show')) {
+      renderNotifications();
+    }
+  }
+}
+
+async function renderNotifications() {
+  if (!auth.currentUser || (currentUserId && currentUserId.startsWith("HARDCODED_ADMIN_"))) {
+    const list = document.getElementById('notificationList');
+    if (list) list.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Notifications not available for guest admin</div>';
+    return;
+  }
+
+  try {
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+
+    const notifications = await getCollectionData('notifications', [
+      window.firebaseFns.where('recipientId', '==', currentUserId),
+      window.firebaseFns.orderBy('date', 'desc')
+    ]);
+    
+    if(notifications.length === 0) {
+      list.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No notifications</div>';
+      return;
+    }
+    
+    list.innerHTML = '';
+    notifications.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'notification-item' + (n.read ? '' : ' unread');
+      item.innerHTML = `
+        <div style="font-weight: ${n.read ? 'normal' : 'bold'}">${n.message}</div>
+        <div style="font-size: 11px; color: #666; margin-top: 5px;">${new Date(n.date).toLocaleString()}</div>
+      `;
+      item.onclick = async () => {
+        await window.firebaseFns.setDoc(
+          window.firebaseFns.doc(db, 'notifications', n.id),
+          { read: true },
+          { merge: true }
+        );
+        updateNotificationBadge();
+        renderNotifications();
+      };
+      list.appendChild(item);
+    });
+  } catch(error) {
+    console.error('Error rendering notifications:', error);
+  }
+}
+
+// Check permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
 // Expose functions to window
 window.login = login;
 window.submitSignup = submitSignup;
@@ -3476,3 +3605,166 @@ window.updateSubject = updateSubject;
 window.updateScheduleTime = updateScheduleTime;
 window.deleteSubject = deleteSubject;
 window.addSubject = addSubject;
+
+//====== SESSION MANAGEMENT ======
+function startSessionTimer() {
+  if(sessionTimer) clearTimeout(sessionTimer);
+  if(sessionWarningTimer) clearTimeout(sessionWarningTimer);
+  
+  sessionWarningTimer = setTimeout(() => {
+    showSessionWarning();
+  }, SESSION_TIMEOUT - WARNING_BEFORE);
+  
+  sessionTimer = setTimeout(() => {
+    logout();
+    alert('🔒 Your session has expired. Please login again.');
+  }, SESSION_TIMEOUT);
+  
+  document.addEventListener('click', resetSessionTimer);
+  document.addEventListener('keypress', resetSessionTimer);
+}
+
+function resetSessionTimer() {
+  if(sessionTimer) clearTimeout(sessionTimer);
+  if(sessionWarningTimer) clearTimeout(sessionWarningTimer);
+  
+  const warning = document.getElementById('sessionWarning');
+  if (warning) warning.style.display = 'none';
+  
+  sessionWarningTimer = setTimeout(() => {
+    showSessionWarning();
+  }, SESSION_TIMEOUT - WARNING_BEFORE);
+  
+  sessionTimer = setTimeout(() => {
+    logout();
+    alert('🔒 Your session has expired. Please login again.');
+  }, SESSION_TIMEOUT);
+}
+
+function showSessionWarning() {
+  const warning = document.getElementById('sessionWarning');
+  const countdown = document.getElementById('countdown');
+  if (warning && countdown) {
+    warning.style.display = 'block';
+    
+    let seconds = 60;
+    const interval = setInterval(() => {
+      seconds--;
+      countdown.textContent = seconds;
+      if(seconds <= 0 || warning.style.display === 'none') {
+        clearInterval(interval);
+      }
+    }, 1000);
+  }
+}
+
+function recordFailedLogin() {
+  loginAttempts++;
+  const attemptsEl = document.getElementById('loginAttempts');
+  const countEl = document.getElementById('attemptCount');
+  if (attemptsEl && countEl) {
+    attemptsEl.style.display = 'block';
+    countEl.textContent = loginAttempts;
+  }
+  
+  if(loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+    lockAccount();
+  }
+}
+
+function lockAccount() {
+  const loginBtn = document.querySelector('#login button');
+  if (loginBtn) {
+    loginBtn.disabled = true;
+    loginBtn.textContent = '🔒 Account Locked (5 min)';
+    
+    let minutes = 5;
+    lockoutTimer = setInterval(() => {
+      minutes--;
+      if(minutes > 0) {
+        loginBtn.textContent = `🔒 Account Locked (${minutes} min)`;
+      } else {
+        clearInterval(lockoutTimer);
+        loginAttempts = 0;
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🚀 Login';
+        const attemptsEl = document.getElementById('loginAttempts');
+        if (attemptsEl) attemptsEl.style.display = 'none';
+      }
+    }, 60000);
+  }
+}
+
+function resetLoginAttempts() {
+  loginAttempts = 0;
+  const attemptsEl = document.getElementById('loginAttempts');
+  if (attemptsEl) attemptsEl.style.display = 'none';
+}
+
+//====== PWA FUNCTIONS ======
+function setupPWA() {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+    const btn = document.getElementById('installPwaBtn');
+    if (btn) btn.classList.add('show');
+  });
+  
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then((registration) => {
+      console.log('SW registered:', registration);
+    }).catch((error) => {
+      console.log('SW registration failed:', error);
+    });
+  }
+}
+
+function installPWA() {
+  if(window.deferredPrompt) {
+    window.deferredPrompt.prompt();
+    window.deferredPrompt.userChoice.then((choiceResult) => {
+      if(choiceResult.outcome === 'accepted') {
+        console.log('User accepted PWA install');
+      }
+      window.deferredPrompt = null;
+      const btn = document.getElementById('installPwaBtn');
+      if (btn) btn.classList.remove('show');
+    });
+  }
+}
+
+//====== UTILITY FUNCTIONS ======
+function showError(msg) {
+  const el = document.getElementById('msg') || document.getElementById('recoveryMsg');
+  if(el) {
+    el.style.color = '#dc3545';
+    el.textContent = '❌ ' + msg;
+    
+    // Auto-clear after 5 seconds to prevent stale errors
+    setTimeout(() => {
+      if (el.textContent === '❌ ' + msg) {
+        el.textContent = '';
+      }
+    }, 5000);
+  }
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+
+function changeLanguage() {
+  const lang = document.getElementById('languageSelect').value;
+  localStorage.setItem('language', lang);
+  alert('🌐 Language changed to ' + (lang === 'en' ? 'English' : lang === 'fil' ? 'Filipino' : 'Cebuano') + '\n\nNote: Full localization would require translation files.');
+}
+
+// Apply dark mode on load
+if(localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark-mode');
+}
+
+window.showError = showError;
+window.toggleDarkMode = toggleDarkMode;
+window.changeLanguage = changeLanguage;
