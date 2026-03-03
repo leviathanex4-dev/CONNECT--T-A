@@ -10,9 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DSHS">
 
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192x192 (2).png">
-<link rel="stylesheet" href="styles.css">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192x192 (2).png">
+<link rel="stylesheet" href="./styles.css">
 
 <!-- Firebase SDK (v9 Modular) -->
 <script type="module">
@@ -26,7 +26,7 @@
     apiKey: "AIzaSyBr-wATdD81M4lc8dlxqhRUEMKVtHPj-DU",
     authDomain: "connect-ta-13ab9.firebaseapp.com",
     projectId: "connect-ta-13ab9",
-    storageBucket: "connect-ta-13ab9.appspot.com", // FIXED: Reverted to correct bucket name
+    storageBucket: "connect-ta-13ab9.firebasestorage.app",
     messagingSenderId: "38813026824",
     appId: "1:38813026824:web:b471597524cdd56618dfbd",
     measurementId: "G-641QGL0YPZ"
@@ -50,7 +50,7 @@
       collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, writeBatch,
       ref, uploadBytes, getDownloadURL
     };
-    console.log('Firebase initialized successfully');
+    console.log('Firebase initialized');
   } catch (error) {
     console.error('Firebase init error:', error);
   }
@@ -66,14 +66,14 @@
   <div id="loadingOverlay">
     <div class="spinner"></div>
     <p>Loading DSHS System...</p>
-    <p id="loadingStatus" style="font-size: 12px; opacity: 0.8;">Initializing components...</p>
+    <p id="loadingStatus" style="font-size: 12px; opacity: 0.8;">Initializing...</p>
   </div>
 
-  <div class="offline-indicator" id="offlineIndicator" style="display: none;">
+  <div class="offline-indicator" id="offlineIndicator">
     ⚠️ You are offline. Some features may be limited.
   </div>
 
-  <div class="session-warning" id="sessionWarning" style="display: none;">
+  <div class="session-warning" id="sessionWarning">
     ⚠️ Your session will expire in <span id="countdown">60</span> seconds. Click anywhere to stay logged in.
   </div>
   
@@ -141,6 +141,9 @@
     </div>
     <div class="password-strength" id="signupPasswordStrength"></div>
     <p class="strength-text" id="signupStrengthText"></p>
+    <p style="font-size: 11px; color: #666; text-align: left; margin-top: 5px;">
+      Password must contain: 8+ characters, uppercase, lowercase, number, special character
+    </p>
     <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 10px 0;">
       <input type="checkbox" id="agreeTerms" style="width: auto;"> I agree to the Terms and Conditions
     </label>
@@ -175,6 +178,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script src="./script.js"></script>
 </body>
 </html>
