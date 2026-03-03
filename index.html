@@ -3474,14 +3474,35 @@
             <button onclick="addBook()" style="background: #28a745; color: white; margin-top: 10px;">➕ Add Book</button>
           </div>
         `;
+        
+        section.innerHTML += `
+          <input type="text" id="bookSearch" placeholder="🔍 Search books..." onkeyup="searchBooks()">
+          <div id="bookResults"></div>
+        `;
+        
+        renderBooks();
+      } else {
+        section.innerHTML += `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-top: 20px;
+          ">
+            <div style="font-size: 80px; margin-bottom: 20px;">🚧</div>
+            <h4 style="color: var(--main-blue); margin-bottom: 10px;">Coming Soon!</h4>
+            <p style="color: var(--main-gray); font-size: 16px;">This feature is currently under development.</p>
+            <p style="color: var(--main-gray); font-size: 14px; margin-top: 10px;">Please check back later for updates.</p>
+          </div>
+        `;
       }
       
-      section.innerHTML += `
-        <input type="text" id="bookSearch" placeholder="🔍 Search books..." onkeyup="searchBooks()">
-        <div id="bookResults"></div>
-      `;
-      
-      renderBooks();
       content.appendChild(section);
     }
     
@@ -3873,6 +3894,15 @@
       qrDiv.id = "qr-code";
       qrDiv.style.textAlign = "center";
       qrDiv.style.padding = "20px";
+      qrDiv.style.display = "flex";
+      qrDiv.style.justifyContent = "center";
+      qrDiv.style.alignItems = "center";
+      qrDiv.style.border = "3px solid var(--main-blue)";
+      qrDiv.style.borderRadius = "15px";
+      qrDiv.style.background = "white";
+      qrDiv.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+      qrDiv.style.width = "fit-content";
+      qrDiv.style.margin = "0 auto";
       section.appendChild(qrDiv);
       
       const qrCodeData = currentUser + "-" + new Date().toISOString().split("T")[0];
@@ -3886,7 +3916,11 @@
         });
       }, 100);
       
-      section.innerHTML += "<p style='text-align:center;margin-top:15px;'>📱 Scan this QR code for attendance</p>";
+      const instruction = document.createElement("p");
+      instruction.style.textAlign = "center";
+      instruction.style.marginTop = "15px";
+      instruction.textContent = "📱 Scan this QR code for attendance";
+      section.appendChild(instruction);
       
       const perfBox = document.createElement("div");
       perfBox.className = "performance-box";
