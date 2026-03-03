@@ -1,14 +1,8 @@
-const CACHE_NAME = 'dshs-cache-v4';
+const CACHE_NAME = 'dshs-cache-v1';
 const urlsToCache = [
-  './',
-  './index.html',
-  './styles.css',
-  './script.js',
-  './manifest.json',
-  './icon-192x192 (2).png',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  '/',
+  '/index.html',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -21,18 +15,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request)
+    caches.match(event.request)
       .then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+        if (response) {
+          return response;
         }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
+        return fetch(event.request);
       })
   );
 });
