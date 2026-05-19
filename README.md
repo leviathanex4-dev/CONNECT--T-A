@@ -38,7 +38,7 @@ npm run migrate
 # 5. Start the dev server
 npm run dev
 App will be available at http://localhost:3000 (or port you configured).
-```
+
 ---
 Project Structure
 CONNECT-T-A/
@@ -56,6 +56,8 @@ CONNECT-T-A/
 └── vite.config.js        # Build/config (adjust for your bundler)
 Update the structure above to match your actual stack once you spin up your project.
 ---
+```
+```
 Available Scripts
 Command	Action
 npm run dev	Start local development server
@@ -64,6 +66,7 @@ npm run preview	Preview production build locally
 npm run lint	Lint and auto-fix code with ESLint
 npm run test	Run test suite
 ---
+```
 ## Contributing
 1. Fork the repo  
 2. Create a feature branch — `git checkout -b feature/your-feature`  
