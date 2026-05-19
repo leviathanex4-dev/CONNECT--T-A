@@ -11,10 +11,10 @@ Web application [add one-line description of what this app does — e.g. "that l
 ## Tech Stack
 | Layer | Tools |
 |---|---|
-| Frontend | [e.g. React / HTML + CSS + JS / Vue / Next.js] |
-| Backend | [e.g. Node.js + Express / Python Django / Flask] |
-| Database | [e.g. PostgreSQL / MongoDB / SQLite] |
-| Hosting | [tbd] |
+| Frontend | [/ HTML + CSS + JS / ] |
+| Backend | [Firebase] |
+| Database | [Firebase Database] |
+| Hosting | [Github Static Pages] |
 ---
 ## Prerequisites
 Make sure you have the following installed before cloning:
@@ -38,7 +38,8 @@ npm run migrate
 # 5. Start the dev server
 npm run dev
 App will be available at http://localhost:3000 (or port you configured).
-
+```
+```
 ---
 Project Structure
 CONNECT-T-A/
